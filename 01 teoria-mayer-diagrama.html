@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="pt-PT">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Jornada pelo Cérebro: Teoria de Mayer (Sem Scroll)</title>
+    <style>
+        :root {
+            --primary: #3b82f6;
+            --secondary: #10b981;
+            --accent: #f59e0b;
+            --bg: #f8fafc;
+            --text: #1e293b;
+            --panel-bg: #ffffff;
+            --transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            margin: 0;
+            /* Forçar altura total sem scroll */
+            height: 100vh;
+            width: 100vw;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* --- HEADER (Fixo) --- */
+        header {
+            flex-shrink: 0; /* Não encolhe */
+            text-align: center;
+            padding: 1rem;
+            background: rgba(248, 250, 252, 0.9);
+            z-index: 10;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        h1 {
+            font-size: 1.5rem;
+            color: var(--primary);
+            margin: 0 0 0.2rem 0;
+        }
+
+        .subtitle {
+            color: #64748b;
+            font-size: 0.9rem;
+            margin: 0;
+        }
+
+        /* --- CONTAINER PRINCIPAL (Flexível) --- */
+        .container {
+            flex: 1; /* Ocupa todo o espaço restante */
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+            max-width: 1200px; /* Limite de largura em ecrãs gigantes */
+            margin: 0 auto;
+            padding: 1rem;
+            gap: 1rem;
+            overflow: hidden; /* Conteúdo não sai daqui */
+        }
+
+        /* --- ÁREA DO DIAGRAMA (Ocupa o espaço livre) --- */
+        .diagram-wrapper {
+            flex: 1; /* Cresce para ocupar o espaço disponível */
+            background: var(--panel-bg);
+            border-radius: 20px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            border: 1px solid #e2e8f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden; /* Impede que o SVG force o scroll */
+            padding: 1rem;
+            min-height: 0; /* Crucial para flexbox: permite encolher abaixo do conteúdo */
+        }
+
+        svg {
+            width: 100%;
+            height: 100%;
+            max-width: 100%;
+            max-height: 100%;
+            /* Mantém a proporção mas garante que cabe */
+            object-fit: contain; 
+        }
+
+        /* Estilos SVG */
+        .svg-box { fill: #f1f5f9; stroke: #94a3b8; stroke-width: 2; transition: var(--transition); }
+        .svg-text { font-family: 'Segoe UI', sans-serif; fill: #475569; font-size: 14px; font-weight: 600; pointer-events: none; transition: var(--transition); }
+        .svg-arrow { stroke: #cbd5e1; stroke-width: 2; fill: none; marker-end: url(#arrowhead); transition: var(--transition); }
+        .svg-label { font-size: 11px; fill: #94a3b8; font-style: italic; }
+
+        /* Estados Ativos */
+        .active-box { fill: #eff6ff; stroke: var(--primary); stroke-width: 3; filter: drop-shadow(0 4px 6px rgba(59, 130, 246, 0.2)); }
+        .active-text { fill: var(--primary); font-weight: 800; transform-origin: center; transform: scale(1.05); }
+        .active-arrow { stroke: var(--accent); stroke-width: 3; }
+
+        /* --- PAINEL DE EXPLICAÇÃO (Altura contida) --- */
+        .explanation-panel {
+            flex-shrink: 0; /* Tamanho baseado no conteúdo, não encolhe demais */
+            background: var(--panel-bg);
+            border-radius: 20px;
+            padding: 1.5rem;
+            box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.05);
+            border-left: 6px solid var(--primary);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            /* Altura máxima para garantir que não empurra o diagrama para fora em ecrãs pequenos */
+            max-height: 40vh; 
+        }
+
+        #text-content {
+            overflow-y: auto; /* Scroll apenas no texto se for muito longo */
+            margin-bottom: 1rem;
+            padding-right: 5px;
+        }
+
+        .step-title {
+            font-size: 1.3rem;
+            color: var(--primary);
+            margin-bottom: 0.5rem;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .step-content {
+            font-size: 1rem;
+            line-height: 1.5;
+            color: #334155;
+        }
+
+        .concept-tag {
+            display: inline-block;
+            background: #e0f2fe;
+            color: #0369a1;
+            padding: 3px 8px;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        /* --- CONTROLOS --- */
+        .controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: auto; /* Empurra para o fundo do painel */
+        }
+
+        .btn {
+            background: white;
+            border: 2px solid var(--primary);
+            color: var(--primary);
+            padding: 10px 20px;
+            border-radius: 10px;
+            font-size: 0.9rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .btn:hover { background: #eff6ff; transform: translateY(-2px); }
+        .btn:active { transform: translateY(0); }
+        .btn:disabled { border-color: #e2e8f0; color: #94a3b8; cursor: default; transform: none; background: #f8fafc; }
+        
+        .btn-primary { background: var(--primary); color: white; border: 2px solid var(--primary); }
+        .btn-primary:hover { background: #2563eb; border-color: #2563eb; color: white; }
+
+        .progress-dots { display: flex; gap: 6px; }
+        .dot { width: 8px; height: 8px; background: #e2e8f0; border-radius: 50%; transition: var(--transition); }
+        .dot.active { background: var(--primary); transform: scale(1.3); }
+
+        /* Scrollbar Fina */
+        ::-webkit-scrollbar { width: 5px; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+
+        @media (max-width: 600px) {
+            h1 { font-size: 1.2rem; }
+            .container { padding: 0.5rem; gap: 0.5rem; }
+            .explanation-panel { padding: 1rem; border-radius: 15px; }
+            .step-title { font-size: 1.1rem; }
+            .step-content { font-size: 0.9rem; }
+            .btn { padding: 8px 15px; font-size: 0.8rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>Como Aprendemos?</h1>
+        <p class="subtitle">Teoria Cognitiva da Aprendizagem Multimédia (Mayer)</p>
+    </header>
+
+    <div class="container">
+        
+        <div class="diagram-wrapper">
+            <svg viewBox="0 0 800 350" id="main-svg" preserveAspectRatio="xMidYMid meet">
+                <defs>
+                    <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+                        <polygon points="0 0, 10 3.5, 0 7" fill="#cbd5e1" />
+                    </marker>
+                </defs>
+
+                <rect x="20" y="50" width="120" height="250" rx="10" class="svg-box" id="box-pres" fill="none" stroke-dasharray="5,5"/>
+                <text x="80" y="40" text-anchor="middle" class="svg-text">Apresentação Multimédia</text>
+                
+                <rect x="35" y="70" width="90" height="60" rx="5" class="svg-box" id="box-words" />
+                <text x="80" y="105" text-anchor="middle" class="svg-text">Palavras</text>
+                
+                <rect x="35" y="200" width="90" height="60" rx="5" class="svg-box" id="box-pics" />
+                <text x="80" y="235" text-anchor="middle" class="svg-text">Imagens</text>
+
+                <rect x="180" y="50" width="120" height="250" rx="10" class="svg-box" id="box-sensory" />
+                <text x="240" y="40" text-anchor="middle" class="svg-text">Memória Sensorial</text>
+
+                <rect x="195" y="70" width="90" height="60" rx="5" class="svg-box" id="box-ears" />
+                <text x="240" y="105" text-anchor="middle" class="svg-text">Ouvidos</text>
+
+                <rect x="195" y="200" width="90" height="60" rx="5" class="svg-box" id="box-eyes" />
+                <text x="240" y="235" text-anchor="middle" class="svg-text">Olhos</text>
+
+                <line x1="125" y1="100" x2="185" y2="100" class="svg-arrow" id="arrow-1" />
+                <line x1="125" y1="230" x2="185" y2="230" class="svg-arrow" id="arrow-2" />
+                <line x1="125" y1="100" x2="185" y2="210" class="svg-arrow" id="arrow-cross" />
+
+                <rect x="340" y="50" width="280" height="250" rx="10" class="svg-box" id="box-working" />
+                <text x="480" y="35" text-anchor="middle" class="svg-text">Memória de Trabalho</text>
+
+                <rect x="360" y="70" width="80" height="60" rx="5" class="svg-box" id="box-sounds" />
+                <text x="400" y="105" text-anchor="middle" class="svg-text">Sons</text>
+
+                <rect x="360" y="200" width="80" height="60" rx="5" class="svg-box" id="box-img-mem" />
+                <text x="400" y="235" text-anchor="middle" class="svg-text">Imagens</text>
+
+                <rect x="520" y="70" width="80" height="60" rx="5" class="svg-box" id="box-verbal" />
+                <text x="560" y="100" text-anchor="middle" class="svg-text" font-size="12">Modelo</text>
+                <text x="560" y="115" text-anchor="middle" class="svg-text" font-size="12">Verbal</text>
+
+                <rect x="520" y="200" width="80" height="60" rx="5" class="svg-box" id="box-pictorial" />
+                <text x="560" y="230" text-anchor="middle" class="svg-text" font-size="12">Modelo</text>
+                <text x="560" y="245" text-anchor="middle" class="svg-text" font-size="12">Pictórico</text>
+
+                <line x1="285" y1="100" x2="350" y2="100" class="svg-arrow" id="arrow-select-w" />
+                <text x="318" y="90" text-anchor="middle" class="svg-label">Seleção</text>
+
+                <line x1="285" y1="230" x2="350" y2="230" class="svg-arrow" id="arrow-select-i" />
+                <text x="318" y="220" text-anchor="middle" class="svg-label">Seleção</text>
+
+                <line x1="440" y1="100" x2="510" y2="100" class="svg-arrow" id="arrow-org-w" />
+                <text x="480" y="90" text-anchor="middle" class="svg-label">Organização</text>
+
+                <line x1="440" y1="230" x2="510" y2="230" class="svg-arrow" id="arrow-org-i" />
+                <text x="480" y="220" text-anchor="middle" class="svg-label">Organização</text>
+
+                <line x1="600" y1="100" x2="640" y2="135" class="svg-arrow" id="arrow-int-1" />
+                <line x1="600" y1="230" x2="640" y2="165" class="svg-arrow" id="arrow-int-2" />
+                <circle cx="645" cy="150" r="5" fill="#f59e0b" id="integration-node" opacity="0"/>
+
+                <rect x="680" y="50" width="100" height="250" rx="10" class="svg-box" id="box-ltm" />
+                <text x="730" y="35" text-anchor="middle" class="svg-text" font-size="12">Longo Prazo</text>
+                
+                <rect x="690" y="120" width="80" height="60" rx="5" class="svg-box" id="box-knowledge" />
+                <text x="730" y="150" text-anchor="middle" class="svg-text" font-size="11">Conhecimento</text>
+                <text x="730" y="165" text-anchor="middle" class="svg-text" font-size="11">Prévio</text>
+
+                <line x1="690" y1="150" x2="655" y2="150" class="svg-arrow" id="arrow-prior" stroke-dasharray="4"/>
+            </svg>
+        </div>
+
+        <div class="explanation-panel">
+            <div id="text-content">
+                </div>
+            
+            <div class="controls">
+                <button id="btn-prev" class="btn" onclick="changeStep(-1)" disabled>← Anterior</button>
+                <div class="progress-dots" id="dots-container"></div>
+                <button id="btn-next" class="btn btn-primary" onclick="changeStep(1)">Próximo →</button>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // Dados da Jornada Pedagógica
+        const steps = [
+            {
+                title: "👋 Bem-vindo à Mente Humana",
+                content: "Como aprendemos? Segundo Mayer, a aprendizagem é um processo ativo de filtrar, organizar e conectar informação. Vamos explorar o diagrama da <strong>Teoria Cognitiva da Aprendizagem Multimédia</strong>.",
+                highlight: [],
+                tag: "Introdução"
+            },
+            {
+                title: "1. O Início: Multimédia",
+                content: "Começa com o material apresentado. Pode ser <strong>Palavras</strong> (texto/narração) ou <strong>Imagens</strong> (vídeos/gráficos). Aprendemos melhor com ambos (<em>Princípio Multimédia</em>).",
+                highlight: ["box-pres", "box-words", "box-pics"],
+                tag: "Entrada"
+            },
+            {
+                title: "2. Memória Sensorial",
+                content: "A info entra pelos olhos e ouvidos. Repara nas setas: palavras escritas entram pelos olhos, faladas pelos ouvidos. O cérebro começa a separar os canais aqui.",
+                highlight: ["box-sensory", "box-ears", "box-eyes", "arrow-1", "arrow-2", "arrow-cross"],
+                tag: "Canais"
+            },
+            {
+                title: "3. O Filtro: Seleção",
+                content: "Não conseguimos focar em tudo. Temos de fazer uma <strong>Seleção</strong>. Filtramos apenas o importante para a próxima fase. Ruído excessivo prejudica este passo.",
+                highlight: ["arrow-select-w", "arrow-select-i"],
+                tag: "Atenção"
+            },
+            {
+                title: "4. Memória de Trabalho",
+                content: "A info entra na <strong>Memória de Trabalho</strong>. Transformamos sons em 'palavras mentais' e visuais em 'imagens mentais'. É um espaço muito limitado!",
+                highlight: ["box-working", "box-sounds", "box-img-mem"],
+                tag: "Limitada"
+            },
+            {
+                title: "5. A Organização",
+                content: "O cérebro organiza as peças. Constrói um <strong>Modelo Verbal</strong> e um <strong>Modelo Pictórico</strong> coerentes. É como montar dois puzzles separados na tua cabeça.",
+                highlight: ["box-verbal", "box-pictorial", "arrow-org-w", "arrow-org-i"],
+                tag: "Estrutura"
+            },
+            {
+                title: "6. A Integração",
+                content: "Aqui acontece a magia. O cérebro conecta o Modelo Verbal com o Modelo Pictórico. Deixam de ser dados soltos e cria-se uma compreensão profunda.",
+                highlight: ["integration-node", "arrow-int-1", "arrow-int-2"],
+                tag: "Conexão"
+            },
+            {
+                title: "7. Conhecimento Prévio",
+                content: "Não aprendemos no vácuo. Vamos buscar o que já sabemos à <strong>Memória de Longo Prazo</strong>. O novo conhecimento funde-se com o antigo para ficar gravado.",
+                highlight: ["box-ltm", "box-knowledge", "arrow-prior"],
+                tag: "Longo Prazo"
+            },
+            {
+                title: "🎉 Resumo",
+                content: "Resumindo: Temos dois canais (Visual/Verbal) e capacidade limitada. Aprender exige esforço ativo de selecionar, organizar e integrar.",
+                highlight: ["box-pres", "box-sensory", "box-working", "box-ltm"],
+                tag: "Fim"
+            }
+        ];
+
+        let currentStep = 0;
+
+        // Referências DOM
+        const textContent = document.getElementById('text-content');
+        const dotsContainer = document.getElementById('dots-container');
+        const btnPrev = document.getElementById('btn-prev');
+        const btnNext = document.getElementById('btn-next');
+
+        function init() {
+            steps.forEach((_, index) => {
+                const dot = document.createElement('div');
+                dot.classList.add('dot');
+                if (index === 0) dot.classList.add('active');
+                dotsContainer.appendChild(dot);
+            });
+            updateUI();
+        }
+
+        function updateUI() {
+            const step = steps[currentStep];
+
+            // Atualizar Texto
+            textContent.style.opacity = 0;
+            setTimeout(() => {
+                textContent.innerHTML = `
+                    <div class="step-title">
+                        <span>${step.title}</span> 
+                        ${step.tag ? `<span class="concept-tag">${step.tag}</span>` : ''}
+                    </div>
+                    <div class="step-content">${step.content}</div>
+                `;
+                textContent.style.opacity = 1;
+            }, 200);
+
+            // Atualizar Diagrama
+            resetHighlights();
+            step.highlight.forEach(id => {
+                const el = document.getElementById(id);
+                if (el) {
+                    if (el.tagName === 'rect' || el.tagName === 'circle') el.classList.add('active-box');
+                    if (el.tagName === 'text') el.classList.add('active-text');
+                    if (el.tagName === 'line') el.classList.add('active-arrow');
+                    if(id === 'integration-node') el.setAttribute('opacity', '1');
+                }
+            });
+
+            // Atualizar Botões
+            btnPrev.disabled = currentStep === 0;
+            btnNext.innerHTML = currentStep === steps.length - 1 ? 'Recomeçar ↺' : 'Próximo →';
+
+            // Atualizar Pontos
+            document.querySelectorAll('.dot').forEach((dot, index) => {
+                dot.classList.toggle('active', index === currentStep);
+            });
+        }
+
+        function resetHighlights() {
+            document.querySelectorAll('.svg-box').forEach(el => el.classList.remove('active-box'));
+            document.querySelectorAll('.svg-text').forEach(el => el.classList.remove('active-text'));
+            document.querySelectorAll('.svg-arrow').forEach(el => el.classList.remove('active-arrow'));
+            document.getElementById('integration-node').setAttribute('opacity', '0');
+        }
+
+        window.changeStep = function(direction) {
+            currentStep += direction;
+            if (currentStep >= steps.length) currentStep = 0;
+            updateUI();
+        }
+
+        init();
+    </script>
+</body>
+</html>

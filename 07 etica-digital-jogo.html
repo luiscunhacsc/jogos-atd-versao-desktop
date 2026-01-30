@@ -1,0 +1,860 @@
+<!DOCTYPE html>
+<html lang="pt-PT">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>EthiChat: Simulador Completo</title>
+    <style>
+        :root {
+            --bg-app: #e5e5e5;
+            --header-bg: #008069;
+            --msg-in: #ffffff;
+            --msg-out: #dcf8c6;
+            --msg-sys: #ffe4c4;
+            --text-main: #303030;
+            --text-muted: #667781;
+            --accent: #00a884;
+            /* Safe area variables */
+            --safe-top: env(safe-area-inset-top, 0px);
+            --safe-bottom: env(safe-area-inset-bottom, 20px);
+        }
+
+        * {
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        /* Reset & Base */
+        html,
+        body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            /* Fallback */
+            height: 100dvh;
+            overflow: hidden;
+            /* Previne scroll no body */
+            position: fixed;
+            /* Fixa o viewport no iOS para evitar bounce */
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: #d1d7db;
+        }
+
+        /* Container Principal */
+        .app-container {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            background-color: #efeae2;
+            background-image: url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png');
+            background-repeat: repeat;
+            background-blend-mode: soft-light;
+            position: relative;
+        }
+
+        /* Desktop specific styles */
+        @media (min-width: 600px) {
+            body {
+                position: static;
+                /* No desktop, comportamento normal */
+                overflow: auto;
+                align-items: center;
+                justify-content: center;
+                display: flex;
+            }
+
+            .app-container {
+                max-width: 500px;
+                height: 100dvh;
+                max-height: 900px;
+                /* Limite razoável em desktops grandes */
+                box-shadow: 0 0 20px rgba(0, 0, 0, 0.2);
+            }
+        }
+
+        /* Header */
+        header {
+            background-color: var(--header-bg);
+            padding: 10px 15px;
+            padding-top: max(10px, var(--safe-top));
+            color: white;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+            z-index: 10;
+            flex-shrink: 0;
+        }
+
+        .avatar {
+            width: 40px;
+            height: 40px;
+            background: #ccc;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            color: white;
+            font-weight: bold;
+        }
+
+        .chat-info h1 {
+            margin: 0;
+            font-size: 1rem;
+            font-weight: 600;
+        }
+
+        .chat-info p {
+            margin: 0;
+            font-size: 0.75rem;
+            opacity: 0.8;
+            margin-top: 2px;
+        }
+
+        /* Área de Chat */
+        .chat-area {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px 15px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            scroll-behavior: smooth;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        /* Bolhas de Mensagem */
+        .msg {
+            max-width: 85%;
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            line-height: 1.4;
+            position: relative;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+            animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        @keyframes popIn {
+            from {
+                transform: scale(0.8);
+                opacity: 0;
+            }
+
+            to {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        .msg-in {
+            background-color: var(--msg-in);
+            align-self: flex-start;
+            border-top-left-radius: 0;
+        }
+
+        .msg-out {
+            background-color: var(--msg-out);
+            align-self: flex-end;
+            border-top-right-radius: 0;
+        }
+
+        .msg-sys {
+            background-color: #ffebcd;
+            align-self: center;
+            font-size: 0.85rem;
+            text-align: center;
+            border: 1px solid #ffcc80;
+            max-width: 90%;
+        }
+
+        .msg-meta {
+            display: block;
+            font-size: 0.65rem;
+            color: var(--text-muted);
+            text-align: right;
+            margin-top: 4px;
+        }
+
+        /* Área de Input (Opções) */
+        .input-area {
+            background-color: #f0f2f5;
+            padding: 15px;
+            padding-bottom: max(30px, var(--safe-bottom));
+            /* Padding seguro */
+            border-top: 1px solid #ddd;
+            width: 100%;
+            z-index: 20;
+            flex-shrink: 0;
+            max-height: 80vh;
+            /* Mais espaço para opções */
+            overflow-y: auto;
+        }
+
+        .options-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .btn-option {
+            background: white;
+            border: 1px solid #ddd;
+            padding: 12px;
+            border-radius: 20px;
+            text-align: left;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: background 0.2s;
+            color: var(--text-main);
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+            /* Melhorar target de toque */
+            min-height: 44px;
+            touch-action: manipulation;
+        }
+
+        .btn-option:hover {
+            background-color: #f5f6f6;
+        }
+
+        /* Indicador de Escrita */
+        .typing-indicator {
+            background: var(--msg-in);
+            padding: 10px 15px;
+            border-radius: 20px;
+            border-bottom-left-radius: 0;
+            align-self: flex-start;
+            display: none;
+            gap: 5px;
+            width: fit-content;
+            margin-bottom: 10px;
+        }
+
+        .dot {
+            width: 8px;
+            height: 8px;
+            background: #b6b6b6;
+            border-radius: 50%;
+            animation: bounce 1.4s infinite ease-in-out both;
+        }
+
+        .dot:nth-child(1) {
+            animation-delay: -0.32s;
+        }
+
+        .dot:nth-child(2) {
+            animation-delay: -0.16s;
+        }
+
+        @keyframes bounce {
+
+            0%,
+            80%,
+            100% {
+                transform: scale(0);
+            }
+
+            40% {
+                transform: scale(1);
+            }
+        }
+
+        /* Modal Final */
+        .modal {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            z-index: 100;
+            display: none;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            color: white;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .btn-reset {
+            background: var(--accent);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 25px;
+            font-size: 1rem;
+            margin-top: 20px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .progress-bar {
+            position: absolute;
+            top: 0;
+            left: 0;
+            height: 4px;
+            background: #25d366;
+            width: 0%;
+            transition: width 0.3s;
+            z-index: 11;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="app-container">
+        <div class="progress-bar" id="progress"></div>
+        <header>
+            <div class="avatar" id="header-avatar" style="background: #00a884;">🛡️</div>
+            <div class="chat-info">
+                <h1 id="contact-name">EthiChat</h1>
+                <p id="contact-status">Online</p>
+            </div>
+        </header>
+
+        <div class="chat-area" id="chat">
+            <div class="msg msg-sys">
+                👋 Bem-vindo ao <b>EthiChat</b>.<br>
+                Vais receber mensagens com dilemas sobre Ética (APA/EFPA/OPP) e Multimédia (Mayer).<br>
+                Escolhe a resposta correta para avançar.
+            </div>
+
+            <div class="typing-indicator" id="typing">
+                <div class="dot"></div>
+                <div class="dot"></div>
+                <div class="dot"></div>
+            </div>
+        </div>
+
+        <div class="input-area">
+            <div class="options-grid" id="options-box">
+                <button class="btn-option" onclick="startGame()">▶️ Iniciar Simulação (20 Cenários)</button>
+            </div>
+        </div>
+
+        <div class="modal" id="end-modal">
+            <div style="font-size: 3rem;">🏅</div>
+            <h1>Simulação Concluída!</h1>
+            <p>Navegaste por 20 cenários críticos de ética e design multimédia.</p>
+            <div style="margin-top: 10px; font-size: 0.9rem; color: #ddd;">
+                Erros cometidos: <span id="error-count">0</span>
+            </div>
+            <button class="btn-reset" onclick="location.reload()">Jogar Novamente</button>
+        </div>
+    </div>
+
+    <script>
+        // === BANCO DE DADOS: 20 CENÁRIOS (APA, EFPA, OPP, MAYER) ===
+        const scenarios = [
+            // --- GRUPO 1: ÉTICA E TELEPSICOLOGIA (APA/EFPA/OPP) ---
+            {
+                id: 1,
+                sender: "Cliente Joana",
+                avatar: "👩",
+                msg: "Olá Dr., estou de férias no Brasil por 2 semanas. Podemos manter a nossa videochamada habitual?",
+                options: [
+                    {
+                        text: "Claro, envio o link como habitual.",
+                        correct: false,
+                        feedback: "❌ <b>Risco (APA/EFPA):</b> Prática Transjurisdicional[cite: 154]. Tens de verificar leis locais e ter plano de emergência local."
+                    },
+                    {
+                        text: "Não, infelizmente é proibido exercer psicologia noutra jurisdição.",
+                        correct: false,
+                        feedback: "❌ <b>Impreciso (APA):</b> Não é proibido universalmente, mas exige verificação das leis locais.[cite: 154]."
+                    },
+                    {
+                        text: "Verifico a legislação e o seu contacto de emergência local primeiro.",
+                        correct: true,
+                        feedback: "✅ <b>Correto!</b> Respeito pela jurisdição e segurança do paciente são prioritários[cite: 154, 168]."
+                    }
+                ]
+            },
+            {
+                id: 2,
+                sender: "Colega Pedro",
+                avatar: "👨‍⚕️",
+                msg: "Esta App gratuita de IA transcreve sessões e faz resumos. Queres o link?",
+                options: [
+                    {
+                        text: "Manda! Poupa imenso tempo.",
+                        correct: false,
+                        feedback: "❌ <b>Risco (APA/EFPA):</b> Apps gratuitas podem vender dados. É preciso encriptação e acordos de segurança[cite: 145, 172]."
+                    },
+                    {
+                        text: "Só se tiver contrato de confidencialidade e encriptação garantida.",
+                        correct: true,
+                        feedback: "✅ <b>Correto!</b> A segurança dos dados exige medidas técnicas robustas[cite: 145, 172]."
+                    }
+                ]
+            },
+            {
+                id: 3,
+                sender: "Cliente Rui",
+                avatar: "👱",
+                msg: "O Skype falha. Podemos falar por videochamada do Instagram? É mais prático.",
+                options: [
+                    {
+                        text: "OK, ligue-me por lá.",
+                        correct: false,
+                        feedback: "❌ <b>Risco (EFPA):</b> Misturar redes sociais pessoais compromete limites e segurança[cite: 174]."
+                    },
+                    {
+                        text: "Para sua segurança, temos de usar a plataforma encriptada acordada.",
+                        correct: true,
+                        feedback: "✅ <b>Correto!</b> Devemos usar canais seguros e profissionais[cite: 145]."
+                    }
+                ]
+            },
+            {
+                id: 4,
+                sender: "Diretor Clínica",
+                avatar: "👔",
+                msg: "Vamos pôr um Chatbot de IA a fazer triagem de suicídio no site. O que achas?",
+                options: [
+                    {
+                        text: "Perigoso. A IA precisa de supervisão humana e pode falhar na empatia.",
+                        correct: true,
+                        feedback: "✅ <b>Correto (OPP):</b> A IA exige supervisão ('human-in-the-loop') em situações de risco[cite: 206, 214]."
+                    },
+                    {
+                        text: "Ótimo, é eficiente e funciona 24h.",
+                        correct: false,
+                        feedback: "❌ <b>Risco (OPP):</b> Eficiência não supera a segurança. Algoritmos podem falhar criticamente[cite: 199]."
+                    }
+                ]
+            },
+            {
+                id: 5,
+                sender: "Colega Ana",
+                avatar: "👩‍⚕️",
+                msg: "Vou enviar o PDF do teste WISC à mãe para ela aplicar ao filho, enquanto eu vejo no Zoom.",
+                options: [
+                    {
+                        text: "Não podes. Isso viola a estandardização e validade do teste.",
+                        correct: true,
+                        feedback: "✅ <b>Correto (APA/EFPA):</b> Testes devem ser validados para uso online ou manter a integridade[cite: 150, 184]."
+                    },
+                    {
+                        text: "Boa adaptação às circunstâncias.",
+                        correct: false,
+                        feedback: "❌ <b>Erro (APA):</b> Alterar a administração compromete a validade dos resultados[cite: 150]."
+                    }
+                ]
+            },
+            {
+                id: 6,
+                sender: "Sistema",
+                avatar: "⚠️",
+                msg: "ALERTA: Cliente com ideação suicida ativa. A chamada caiu e não atende o telemóvel.",
+                options: [
+                    {
+                        text: "Espero que ligue de volta.",
+                        correct: false,
+                        feedback: "❌ <b>Negligência (APA):</b> Em risco iminente, é preciso agir[cite: 152]."
+                    },
+                    {
+                        text: "Contacto a emergência local da morada dele (plano prévio).",
+                        correct: true,
+                        feedback: "✅ <b>Correto!</b> O plano de emergência com localização física é vital[cite: 152]."
+                    }
+                ]
+            },
+            {
+                id: 7,
+                sender: "Cliente Sofia",
+                avatar: "👩",
+                msg: "Encontrei o seu Facebook pessoal! Enviei pedido de amizade.",
+                options: [
+                    {
+                        text: "Aceitar para criar aliança.",
+                        correct: false,
+                        feedback: "❌ <b>Violação de Limites (EFPA):</b> Relações duplas nas redes confundem o papel terapêutico[cite: 166]."
+                    },
+                    {
+                        text: "Explicar que não aceito clientes nas redes pessoais por política profissional.",
+                        correct: true,
+                        feedback: "✅ <b>Correto!</b> Limites claros protegem a relação profissional[cite: 170]."
+                    }
+                ]
+            },
+            {
+                id: 8,
+                sender: "User 'Shadow'",
+                avatar: "👤",
+                msg: "Quero consulta anónima. Pago em crypto, sem câmara, sem nome real.",
+                options: [
+                    {
+                        text: "Recuso. Preciso de verificar a identidade para segurança e consentimento.",
+                        correct: true,
+                        feedback: "✅ <b>Correto (EFPA):</b> Verificação de identidade é crucial para responsabilidade legal e clínica[cite: 180]."
+                    },
+                    {
+                        text: "Aceito, o importante é ajudar.",
+                        correct: false,
+                        feedback: "❌ <b>Risco (EFPA):</b> Sem identidade, não podes agir em emergência nem garantir consentimento[cite: 180]."
+                    }
+                ]
+            },
+            {
+                id: 9,
+                sender: "Colega Tiago",
+                avatar: "👨",
+                msg: "Estou no aeroporto. Posso fazer a sessão no Wi-Fi público num canto calmo?",
+                options: [
+                    {
+                        text: "Sim, usa fones.",
+                        correct: false,
+                        feedback: "❌ <b>Inseguro (APA):</b> Wi-Fi público é vulnerável a hackers e o local não garante privacidade acústica[cite: 145]."
+                    },
+                    {
+                        text: "Não! É inseguro digitalmente e fisicamente.",
+                        correct: true,
+                        feedback: "✅ <b>Correto!</b> Privacidade exige rede segura e ambiente controlado[cite: 145]."
+                    }
+                ]
+            },
+            {
+                id: 10,
+                sender: "Diretor RH",
+                avatar: "🏢",
+                msg: "A nossa IA de recrutamento rejeitou 90% das mulheres. A empresa diz que o algoritmo é neutro.",
+                options: [
+                    {
+                        text: "É viés algorítmico. A IA replicou preconceitos históricos.",
+                        correct: true,
+                        feedback: "✅ <b>Correto (OPP):</b> Sistemas de IA podem perpetuar discriminação se não auditados[cite: 199, 210]."
+                    },
+                    {
+                        text: "A matemática é neutra.",
+                        correct: false,
+                        feedback: "❌ <b>Erro (OPP):</b> Algoritmos aprendem com dados enviesados do passado (Bias)[cite: 199]."
+                    }
+                ]
+            },
+            // --- GRUPO 2: DESIGN MULTIMÉDIA (MAYER) & GESTÃO DE DADOS ---
+            {
+                id: 11,
+                sender: "Designer Edu",
+                avatar: "🎨",
+                msg: "Estou a editar o vídeo educativo. Vou pôr uma música de fundo animada para não ser aborrecido.",
+                options: [
+                    {
+                        text: "Boa ideia, torna o vídeo mais cativante.",
+                        correct: false,
+                        feedback: "❌ <b>Violação do Princípio da Coerência (Mayer):</b> Música de fundo é material estranho que sobrecarrega a aprendizagem[cite: 108]."
+                    },
+                    {
+                        text: "Melhor não. Segundo Mayer, devemos excluir sons irrelevantes.",
+                        correct: true,
+                        feedback: "✅ <b>Correto!</b> O Princípio da Coerência diz para remover ruído e distrações[cite: 108]."
+                    }
+                ]
+            },
+            {
+                id: 12,
+                sender: "Formadora Bea",
+                avatar: "👩‍🏫",
+                msg: "Nos slides da aula, pus o texto todo que vou dizer. Assim podem ler enquanto me ouvem.",
+                options: [
+                    {
+                        text: "Isso cria redundância. Eles vão ignorar a tua voz ou o texto.",
+                        correct: true,
+                        feedback: "✅ <b>Correto!</b> Princípio da Redundância: Texto e narração idênticos competem e prejudicam a aprendizagem[cite: 110]."
+                    },
+                    {
+                        text: "Excelente, reforça a mensagem duas vezes.",
+                        correct: false,
+                        feedback: "❌ <b>Erro (Mayer):</b> O cérebro sobrecarrega ao tentar processar a mesma info visual e auditiva ao mesmo tempo[cite: 110]."
+                    }
+                ]
+            },
+            {
+                id: 13,
+                sender: "Gestor IT",
+                avatar: "💻",
+                msg: "Temos um disco rígido antigo com dados de clientes de 2015. Posso deitar no lixo comum?",
+                options: [
+                    {
+                        text: "Sim, já passaram muitos anos.",
+                        correct: false,
+                        feedback: "❌ <b>Violação de Segurança (APA):</b> Dados devem ser eliminados de forma segura (destruição física ou wipe)[cite: 145]."
+                    },
+                    {
+                        text: "Não! Temos de garantir a destruição segura dos dados primeiro.",
+                        correct: true,
+                        feedback: "✅ <b>Correto!</b> O descarte de equipamentos exige garantia de que os dados são irrecuperáveis[cite: 145]."
+                    }
+                ]
+            },
+            {
+                id: 14,
+                sender: "Estagiário",
+                avatar: "👦",
+                msg: "Estou sem tempo para o relatório. Pedi ao ChatGPT para escrever a análise clínica. Ficou ótimo!",
+                options: [
+                    {
+                        text: "Apaga isso! Inseriste dados do paciente numa IA pública?",
+                        correct: true,
+                        feedback: "✅ <b>Correto (OPP):</b> Risco grave de confidencialidade e falta de precisão clínica/supervisão[cite: 199, 214]."
+                    },
+                    {
+                        text: "Boa estratégia, desde que leias antes de enviar.",
+                        correct: false,
+                        feedback: "❌ <b>Erro Ético:</b> Inserir dados clínicos em IAs públicas viola a confidencialidade[cite: 199]."
+                    }
+                ]
+            },
+            {
+                id: 15,
+                sender: "Prof. Carlos",
+                avatar: "👴",
+                msg: "Vou gravar a narração dos vídeos com aquela voz robótica do Google. É mais rápido que gravar a minha.",
+                options: [
+                    {
+                        text: "Tenta gravar tu. A voz humana promove melhor aprendizagem.",
+                        correct: true,
+                        feedback: "✅ <b>Correto!</b> Princípio da Voz (Mayer): Vozes humanas padrão são melhores que vozes de máquina[cite: 118]."
+                    },
+                    {
+                        text: "Sem problema, hoje em dia as pessoas habituam-se.",
+                        correct: false,
+                        feedback: "❌ <b>Erro (Mayer):</b> A voz humana cria uma resposta social que melhora o esforço cognitivo[cite: 118]."
+                    }
+                ]
+            },
+            {
+                id: 16,
+                sender: "Cliente (16 anos)",
+                avatar: "🧒",
+                msg: "Olá, quero marcar consulta online mas não quero que os meus pais saibam.",
+                options: [
+                    {
+                        text: "Vamos marcar. O que é dito aqui é confidencial.",
+                        correct: false,
+                        feedback: "❌ <b>Risco Legal/Ético (EFPA):</b> Menores precisam geralmente de consentimento dos tutores, especialmente online[cite: 180]."
+                    },
+                    {
+                        text: "Como és menor, preciso de falar sobre o consentimento dos teus pais primeiro.",
+                        correct: true,
+                        feedback: "✅ <b>Correto!</b> O consentimento informado com vulneráveis/menores exige cuidados redobrados[cite: 180]."
+                    }
+                ]
+            },
+            {
+                id: 17,
+                sender: "Designer UI",
+                avatar: "👾",
+                msg: "Para o e-learning, vou usar linguagem formal: 'O sujeito deve clicar aqui'. Dá mais autoridade.",
+                options: [
+                    {
+                        text: "Usa antes 'Tu deves' ou 'Clica aqui'.",
+                        correct: true,
+                        feedback: "✅ <b>Correto!</b> Princípio da Personalização (Mayer): Estilo de conversa melhora a aprendizagem[cite: 117]."
+                    },
+                    {
+                        text: "Concordo, mantém o tom académico.",
+                        correct: false,
+                        feedback: "❌ <b>Erro (Mayer):</b> Linguagem formal distancia o aluno e reduz o processamento ativo[cite: 117]."
+                    }
+                ]
+            },
+            {
+                id: 18,
+                sender: "Colega Marta",
+                avatar: "👩‍⚕️",
+                msg: "Tenho um paciente com fobia de voar. Vou usar terapia de Realidade Virtual (VR). Nunca usei, mas aprendo na hora.",
+                options: [
+                    {
+                        text: "Força! É uma tecnologia inovadora.",
+                        correct: false,
+                        feedback: "❌ <b>Incompetência (APA):</b> Deves ter treino/supervisão antes de usar novas tecnologias com pacientes[cite: 143]."
+                    },
+                    {
+                        text: "Tens formação em VR? Se não, é eticamente arriscado.",
+                        correct: true,
+                        feedback: "✅ <b>Correto!</b> A competência tecnológica é um requisito ético fundamental[cite: 143, 158]."
+                    }
+                ]
+            },
+            {
+                id: 19,
+                sender: "Produtor Vídeo",
+                avatar: "🎥",
+                msg: "Vou pôr a tua cara num quadradinho no canto do vídeo durante a explicação toda. Fica tipo Twitch!",
+                options: [
+                    {
+                        text: "Não vale a pena. A minha cara pode distrair do conteúdo visual.",
+                        correct: true,
+                        feedback: "✅ <b>Correto!</b> Princípio da Imagem (Mayer): A imagem do orador não melhora necessariamente a aprendizagem e pode distrair[cite: 118]."
+                    },
+                    {
+                        text: "Sim! As pessoas gostam de ver quem fala.",
+                        correct: false,
+                        feedback: "❌ <b>Erro (Mayer):</b> Pode causar sobrecarga visual desnecessária se não adicionar valor[cite: 118]."
+                    }
+                ]
+            },
+            {
+                id: 20,
+                sender: "Chefe Empresa",
+                avatar: "🏢",
+                msg: "Instalamos câmaras com IA para ler as expressões faciais dos trabalhadores e detetar quem está infeliz.",
+                options: [
+                    {
+                        text: "Isso levanta graves questões de privacidade e pressão laboral.",
+                        correct: true,
+                        feedback: "✅ <b>Correto (OPP):</b> Monitorização invasiva por IA pode piorar a saúde psicológica em vez de ajudar[cite: 201]."
+                    },
+                    {
+                        text: "Inovador! Assim podemos despedir quem anda triste.",
+                        correct: false,
+                        feedback: "❌ <b>Anti-ético (OPP):</b> O uso de IA no trabalho deve promover bem-estar, não vigilância punitiva[cite: 201]."
+                    }
+                ]
+            }
+        ];
+
+        // === LÓGICA DO JOGO ===
+        let currentScenarioIndex = 0;
+        let errors = 0;
+        const chatBox = document.getElementById('chat');
+        const optionsBox = document.getElementById('options-box');
+        const typingIndicator = document.getElementById('typing');
+        const headerName = document.getElementById('contact-name');
+        const headerAvatar = document.getElementById('header-avatar');
+        const progressBar = document.getElementById('progress');
+        const errorDisplay = document.getElementById('error-count');
+
+        function getTime() {
+            const now = new Date();
+            return now.getHours() + ':' + (now.getMinutes() < 10 ? '0' : '') + now.getMinutes();
+        }
+
+        function addMessage(text, type, metaText = getTime()) {
+            const div = document.createElement('div');
+            div.className = `msg ${type}`;
+            div.innerHTML = `
+                ${text}
+                <span class="msg-meta">${metaText}</span>
+            `;
+            chatBox.appendChild(div);
+            chatBox.scrollTop = chatBox.scrollHeight;
+        }
+
+        function showTyping() {
+            typingIndicator.style.display = 'flex';
+            chatBox.scrollTop = chatBox.scrollHeight;
+        }
+
+        function hideTyping() {
+            typingIndicator.style.display = 'none';
+        }
+
+        function setHeader(name, avatar) {
+            headerName.innerText = name;
+            headerAvatar.innerText = avatar;
+        }
+
+        function updateProgress() {
+            const pct = (currentScenarioIndex / scenarios.length) * 100;
+            progressBar.style.width = `${pct}%`;
+        }
+
+        function startGame() {
+            chatBox.innerHTML = ''; // Limpar intro
+            optionsBox.innerHTML = '';
+            currentScenarioIndex = 0;
+            errors = 0;
+            updateProgress();
+
+            // Re-adicionar typing indicator que foi limpo
+            chatBox.appendChild(typingIndicator);
+
+            loadScenario(0);
+        }
+
+        function loadScenario(index) {
+            if (index >= scenarios.length) {
+                setTimeout(() => {
+                    errorDisplay.innerText = errors;
+                    document.getElementById('end-modal').style.display = 'flex';
+                }, 1000);
+                return;
+            }
+
+            const sc = scenarios[index];
+            updateProgress();
+
+            setHeader(sc.sender, sc.avatar);
+
+            setTimeout(() => {
+                showTyping();
+                setTimeout(() => {
+                    hideTyping();
+                    addMessage(sc.msg, 'msg-in');
+                    renderOptions(sc.options);
+                }, 1200);
+            }, 500);
+        }
+
+        function renderOptions(options) {
+            // Baralhar opções para não ser sempre a mesma ordem
+            const shuffled = [...options].sort(() => Math.random() - 0.5);
+
+            optionsBox.innerHTML = '';
+            shuffled.forEach(opt => {
+                const btn = document.createElement('button');
+                btn.className = 'btn-option';
+                btn.innerText = opt.text;
+                btn.onclick = () => handleChoice(opt);
+                optionsBox.appendChild(btn);
+            });
+        }
+
+        function handleChoice(option) {
+            addMessage(option.text, 'msg-out');
+            optionsBox.innerHTML = ''; // Limpar botões
+
+            if (option.correct) {
+                // Resposta Positiva
+                setTimeout(() => {
+                    showTyping();
+                    setTimeout(() => {
+                        hideTyping();
+                        addMessage(option.feedback, 'msg-in'); // Feedback positivo também é bom
+
+                        setTimeout(() => {
+                            addMessage("<i>(Próximo Chat...)</i>", 'msg-sys', 'Sistema');
+                            currentScenarioIndex++;
+                            loadScenario(currentScenarioIndex);
+                        }, 2000);
+                    }, 800);
+                }, 500);
+            } else {
+                // Erro
+                errors++;
+                setTimeout(() => {
+                    addMessage(`👮 <b>Mentor Ético:</b> ${option.feedback}`, 'msg-sys', 'Alerta');
+
+                    // Repetir a pergunta
+                    setTimeout(() => {
+                        addMessage("Tenta outra vez.", 'msg-sys', 'Sistema');
+                        // Restaurar botões originais
+                        const currentOpts = scenarios[currentScenarioIndex].options;
+                        renderOptions(currentOpts);
+                    }, 2500);
+                }, 800);
+            }
+        }
+
+    </script>
+</body>
+
+</html>

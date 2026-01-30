@@ -1,0 +1,611 @@
+<!DOCTYPE html>
+<html lang="pt-PT">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>NeuroQuiz 2026: Texto Completo</title>
+    <style>
+        :root {
+            --bg-gradient: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #312e81 100%);
+            --text-main: #f1f5f9;
+            --text-muted: #94a3b8;
+            --card-back-bg: #0f172a;
+            
+            /* Cores Temáticas */
+            --theme-mayer: #3b82f6; 
+            --theme-apa: #db2777;   
+            --theme-efpa: #059669;  
+            --theme-opp: #ea580c;   
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background: var(--bg-gradient);
+            background-size: 200% 200%;
+            animation: moveGradient 30s ease infinite;
+            color: var(--text-main);
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        @keyframes moveGradient {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        /* HEADER FIXO */
+        header {
+            flex-shrink: 0;
+            padding: 12px 20px;
+            background: rgba(15, 23, 42, 0.9);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            z-index: 10;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header-info h1 {
+            font-size: 1.1rem;
+            font-weight: 800;
+            background: linear-gradient(to right, #e2e8f0, #a5b4fc);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            margin: 0;
+        }
+
+        .subtitle { 
+            margin: 0; 
+            font-size: 0.9rem; 
+            color: #a5b4fc; 
+            font-weight: 600;
+            margin-top: 2px;
+        }
+
+        .score-display {
+            background: rgba(255,255,255,0.1);
+            padding: 6px 12px;
+            border-radius: 8px;
+            font-weight: 700;
+            font-size: 0.95rem;
+            border: 1px solid rgba(255,255,255,0.1);
+            color: #fbbf24;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        /* BARRA DE PROGRESSO */
+        .progress-container {
+            width: 100%;
+            height: 4px;
+            background: rgba(255,255,255,0.1);
+        }
+        .progress-bar {
+            height: 100%;
+            background: var(--theme-mayer);
+            width: 0%;
+            transition: width 0.3s ease;
+            box-shadow: 0 0 10px rgba(59, 130, 246, 0.5);
+        }
+
+        /* ÁREA DO CARTÃO */
+        .main-stage {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            perspective: 1000px;
+            position: relative;
+        }
+
+        .scene {
+            width: 100%;
+            max-width: 700px; /* Ligeiramente mais largo para texto completo */
+            height: 100%;
+            max-height: 550px; 
+            position: relative;
+        }
+
+        .card {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            transition: transform 0.6s cubic-bezier(0.4, 0.2, 0.2, 1);
+            transform-style: preserve-3d;
+            cursor: pointer;
+        }
+
+        .card.is-flipped { transform: rotateY(180deg); }
+
+        .card-face {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            -webkit-backface-visibility: hidden;
+            backface-visibility: hidden;
+            border-radius: 20px;
+            padding: 2rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.4);
+            border: 1px solid rgba(255,255,255,0.1);
+            background: rgba(30, 41, 59, 0.85);
+            backdrop-filter: blur(20px);
+        }
+
+        .card-back {
+            background: var(--card-back-bg);
+            transform: rotateY(180deg);
+            border: 2px solid transparent; 
+        }
+
+        /* CONTEÚDO DO CARTÃO */
+        .category-badge {
+            position: absolute;
+            top: 20px;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #fff;
+            background: rgba(255,255,255,0.15);
+        }
+
+        .question-text {
+            font-size: 1.35rem; /* Ajustado para textos longos */
+            line-height: 1.5;
+            font-weight: 700;
+            color: #fff;
+            width: 100%;
+            max-height: 65%;
+            overflow-y: auto;
+            text-align: center;
+        }
+
+        .answer-text {
+            font-size: 1.1rem; /* Ajustado para textos longos */
+            line-height: 1.6;
+            color: #e2e8f0;
+            width: 100%;
+            max-height: 75%;
+            overflow-y: auto;
+            text-align: left; /* Melhor leitura para parágrafos longos */
+            padding: 0 10px;
+        }
+
+        .tap-hint {
+            position: absolute;
+            bottom: 20px;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            opacity: 0.7;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse { 0%, 100% { opacity: 0.5; } 50% { opacity: 1; } }
+
+        /* RODAPÉ (BOTÕES) */
+        footer {
+            flex-shrink: 0;
+            padding: 15px 20px 25px;
+            background: rgba(15, 23, 42, 0.95);
+            border-top: 1px solid rgba(255,255,255,0.05);
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            z-index: 20;
+        }
+
+        .controls {
+            display: flex;
+            gap: 15px;
+            width: 100%;
+            max-width: 600px;
+            opacity: 0.5;
+            pointer-events: none;
+            filter: grayscale(0.8);
+            transition: all 0.3s;
+        }
+        
+        .controls.active {
+            opacity: 1;
+            pointer-events: auto;
+            filter: grayscale(0);
+        }
+
+        .btn {
+            flex: 1;
+            border: none;
+            padding: 15px;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 700;
+            cursor: pointer;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: transform 0.1s;
+        }
+
+        .btn:active { transform: scale(0.96); }
+        .btn-hard { background: linear-gradient(135deg, #ef4444, #991b1b); }
+        .btn-easy { background: linear-gradient(135deg, #10b981, #059669); }
+
+        /* ECRÃ FINAL */
+        .overlay-screen {
+            display: none;
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(15, 23, 42, 0.98);
+            z-index: 50;
+            flex-direction: column;
+            padding: 20px;
+        }
+
+        .results-content {
+            width: 100%;
+            max-width: 600px;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+
+        .results-header { text-align: center; flex-shrink: 0; margin-bottom: 20px; }
+        .final-score-val { font-size: 3rem; font-weight: 800; color: #fbbf24; margin: 10px 0; }
+        
+        .review-list-container {
+            flex: 1;
+            background: rgba(255,255,255,0.05);
+            border-radius: 12px;
+            border: 1px solid rgba(255,255,255,0.1);
+            overflow-y: auto;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+
+        .review-item {
+            background: rgba(0,0,0,0.3);
+            border-left: 3px solid #ef4444;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+        }
+        
+        .review-q { color: #fff; font-weight: 700; font-size: 0.95rem; margin-bottom: 8px; }
+        .review-a { color: #cbd5e1; font-size: 0.9rem; line-height: 1.5; }
+
+        .btn-restart {
+            width: 100%;
+            background: var(--theme-mayer);
+            padding: 15px;
+            border: none;
+            border-radius: 12px;
+            color: white;
+            font-weight: bold;
+            font-size: 1.1rem;
+            cursor: pointer;
+            flex-shrink: 0;
+        }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar { width: 5px; }
+        ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 10px; }
+        
+        @media (max-width: 400px) {
+            .question-text { font-size: 1.1rem; }
+            .answer-text { font-size: 0.95rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="header-info">
+            <h1>NeuroQuiz 2026</h1>
+            <p class="subtitle" id="card-counter">A carregar...</p>
+        </div>
+        <div class="score-display">
+            <span>🏆</span> <span id="score">0</span>
+        </div>
+    </header>
+
+    <div class="progress-container">
+        <div class="progress-bar" id="progress-bar"></div>
+    </div>
+
+    <div class="main-stage">
+        <div class="scene">
+            <div class="card" id="flashcard">
+                <div class="card-face card-front">
+                    <span class="category-badge" id="cat-front">...</span>
+                    <div class="question-text" id="q-text">A carregar...</div>
+                    <div class="tap-hint">Toque para ver a resposta</div>
+                </div>
+                <div class="card-face card-back" id="card-back-face">
+                    <span class="category-badge" id="cat-back">Resposta</span>
+                    <div class="answer-text" id="a-text">...</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <div class="controls" id="controls">
+            <button class="btn btn-hard" onclick="avaliar(false)">
+                <span>😓</span> Rever (0)
+            </button>
+            <button class="btn btn-easy" onclick="avaliar(true)">
+                <span>🤓</span> Sabia (+100)
+            </button>
+        </div>
+    </footer>
+
+    <div class="overlay-screen" id="end-screen">
+        <div class="results-content">
+            <div class="results-header">
+                <div style="font-size: 3rem;">🎉</div>
+                <h2 style="color:white; margin:5px 0;">Sessão Concluída!</h2>
+                <div class="final-score-val" id="final-score">0</div>
+                <div style="color:#94a3b8; font-size:0.9rem;">Pontuação Final</div>
+            </div>
+
+            <div class="review-list-container" id="review-container">
+                <h4 style="color:#fca5a5; margin-top:0; margin-bottom:10px; text-transform:uppercase; font-size:0.8rem; letter-spacing:1px;">Questões a Rever:</h4>
+                <div id="review-list">
+                    </div>
+            </div>
+
+            <button class="btn-restart" onclick="location.reload()">Nova Sessão (Baralhar)</button>
+        </div>
+    </div>
+
+    <script>
+        // ======================================================
+        // BANCO DE DADOS INTEGRAL (60 Questões com Texto Completo)
+        // ======================================================
+        const bancoCompleto = [
+            // --- MAYER ---
+            { cat: "Mayer", q: "1. Qual é a principal tese do livro \"Multimedia Learning\"?", a: "O livro investiga se as pessoas aprendem mais profundamente quando as ideias são expressas em palavras e imagens, em vez de apenas em palavras, destacando que a Aprendizagem Multimédia é mais eficaz do que métodos baseados apenas em texto." },
+            { cat: "Mayer", q: "2. Como o autor define \"Instrução Multimédia\"?", a: "Instrução Multimédia é definida como a apresentação de material usando tanto palavras quanto imagens, com a intenção de promover a aprendizagem." },
+            { cat: "Mayer", q: "3. Quais são os três pressupostos da Teoria Cognitiva da Aprendizagem Multimédia?", a: "1. <strong>Hipótese do Canal Duplo:</strong> As pessoas possuem canais separados para processar informação visual e verbal.<br>2. <strong>Hipótese da Capacidade Limitada:</strong> Cada canal de processamento tem capacidade limitada.<br>3. <strong>Hipótese do Processamento Ativo:</strong> A aprendizagem eficaz ocorre quando as pessoas processam ativamente a informação." },
+            { cat: "Mayer", q: "4. O que é a hipótese do canal duplo e como ela se relaciona com a Aprendizagem Multimédia?", a: "Propõe que o cérebro humano tem dois canais distintos para processar informações: um para informações visuais e outro para informações verbais, o que é crucial para o design eficaz de materiais de Aprendizagem Multimédia." },
+            { cat: "Mayer", q: "5. De que forma a limitação da capacidade cognitiva afeta a Aprendizagem Multimédia?", a: "A limitação da capacidade cognitiva restringe a quantidade de informação que pode ser processada ao mesmo tempo, afetando a eficiência da Aprendizagem Multimédia, especialmente se o material for muito complexo ou mal projetado." },
+            { cat: "Mayer", q: "6. Explique a hipótese do processamento ativo na Aprendizagem Multimédia.", a: "Afirma que os aprendizes devem se envolver ativamente no processamento da informação, incluindo a organização do material em estruturas mentais coerentes e integrando-o com conhecimentos prévios para uma aprendizagem efetiva." },
+            { cat: "Mayer", q: "7. Quais são os principais tipos de carga cognitiva envolvidos na Aprendizagem Multimédia?", a: "1. <strong>Processamento Extrínseco:</strong> Não ajuda a aprendizagem e deve ser minimizado.<br>2. <strong>Processamento Intrínseco:</strong> Relacionado à complexidade inerente do material.<br>3. <strong>Processamento Gerativo:</strong> Essencial para a aprendizagem significativa (integração)." },
+            { cat: "Mayer", q: "8. Como a Aprendizagem Multimédia pode ser facilitada pela redução do processamento cognitivo irrelevante?", a: "A aprendizagem pode ser melhorada eliminando elementos distrativos e irrelevantes, simplificando o design e focando nos aspetos essenciais do conteúdo para minimizar a sobrecarga cognitiva." },
+            { cat: "Mayer", q: "9. Qual é o Princípio da Coerência e como ele afeta a aprendizagem?", a: "Argumenta que a aprendizagem é mais eficaz quando materiais extrínsecos e irrelevantes são excluídos da instrução Multimédia, enfocando a importância de manter a simplicidade e a relevância no design." },
+            { cat: "Mayer", q: "10. O que é o Princípio do Sinal e como ele pode ser aplicado no design instrucional?", a: "Refere-se à utilização de sinais (como destaques, setas ou falas explicativas) no material de aprendizagem para guiar a atenção do aprendiz para as informações mais importantes, facilitando a compreensão e retenção." },
+            { cat: "Mayer", q: "11. Explique o Princípio da Redundância e suas implicações para o design Multimédia.", a: "Sugere que informação redundante, especialmente em formatos diferentes (como texto e narração simultâneos), pode sobrecarregar o aprendiz cognitivamente e ser menos eficaz." },
+            { cat: "Mayer", q: "12. Como o Princípio da Contiguidade Espacial melhora a Aprendizagem Multimédia?", a: "Indica que a aprendizagem é mais eficiente quando textos explicativos e imagens correspondentes estão próximos um do outro, facilitando a associação e o entendimento." },
+            { cat: "Mayer", q: "13. Descreva o Princípio da Contiguidade Temporal e sua importância.", a: "Argumenta que a aprendizagem é mais eficaz quando as explicações verbais e as imagens correspondentes são apresentadas simultaneamente, em vez de sequencialmente." },
+            { cat: "Mayer", q: "14. O que é o Princípio da Segmentação e como ele pode ser usado para melhorar a aprendizagem?", a: "Refere-se à quebra do conteúdo em segmentos menores e gerenciáveis, permitindo ao aprendiz controlar o ritmo de aprendizagem (ex: clicar para continuar)." },
+            { cat: "Mayer", q: "15. Como o Princípio do Pré-treino auxilia na Aprendizagem Multimédia?", a: "Sugere que ensinar conceitos-chave antes da apresentação do conteúdo principal melhora a compreensão e a retenção." },
+            { cat: "Mayer", q: "16. Qual é o Princípio da Modalidade e por que é relevante na Aprendizagem Multimédia?", a: "Afirma que as pessoas aprendem melhor quando a informação é apresentada em modos diferentes (por exemplo, visual e auditivo) ao invés de um único modo, evitando sobrecarga visual." },
+            { cat: "Mayer", q: "17. Explique o Princípio Multimédia e como ele pode ser aplicado.", a: "Propõe que a combinação de palavras e imagens na instrução é mais eficaz do que o uso de palavras sozinhas." },
+            { cat: "Mayer", q: "18. O que é o Princípio da Personalização na Aprendizagem Multimédia?", a: "Sugere que a aprendizagem é melhorada quando a linguagem na instrução Multimédia é conversacional e amigável (usando 'eu' e 'tu')." },
+            { cat: "Mayer", q: "19. Como o Princípio da Voz e da Imagem influenciam a aprendizagem?", a: "Refere-se ao impacto positivo da qualidade da voz humana (vs robótica) e a observação de que a presença da imagem do orador no ecrã não melhora necessariamente a eficácia." },
+            { cat: "Mayer", q: "20. Que evidências empíricas apoiam o uso de princípios de design na Aprendizagem Multimédia?", a: "O livro apresenta diversos estudos experimentais que demonstram a eficácia dos princípios de design de Multimédia na melhoria da aprendizagem (tamanhos de efeito significativos)." },
+            { cat: "Mayer", q: "21. De que maneira o livro lida com as diferenças individuais na Aprendizagem Multimédia?", a: "O livro aborda como diferentes estilos de aprendizagem e, principalmente, níveis de conhecimento prévio e capacidade espacial influenciam a eficácia (ajuda mais os novatos)." },
+            { cat: "Mayer", q: "22. Como o autor aborda a questão da eficácia da Aprendizagem Multimédia em diferentes contextos educacionais?", a: "Mayer examina como a Aprendizagem Multimédia pode ser adaptada e aplicada efetivamente em diversos ambientes educacionais (sala de aula, e-learning)." },
+            { cat: "Mayer", q: "23. Quais são as limitações dos métodos de investigação em Aprendizagem Multimédia discutidas no livro?", a: "O livro discute as dificuldades em generalizar resultados de laboratório e medir precisamente os efeitos da Aprendizagem Multimédia em ambientes reais." },
+            { cat: "Mayer", q: "24. De que maneira a teoria da carga cognitiva é integrada ao design de instrução Multimédia?", a: "Mayer integra a teoria da carga cognitiva no design instrucional, enfatizando a importância de minimizar a sobrecarga cognitiva (extrínseca) para melhorar a aprendizagem." },
+            { cat: "Mayer", q: "25. Como o autor sugere que a tecnologia Multimédia pode ser otimizada para a educação?", a: "O autor propõe aprimorar a tecnologia Multimédia alinhando-a com princípios cognitivos e adaptando-a aos processos cognitivos dos alunos (tecnologia centrada no humano)." },
+            { cat: "Mayer", q: "26. Quais são as implicações práticas dos princípios de design Multimédia para professores?", a: "Mayer destaca como os princípios de design podem orientar professores e designers instrucionais na criação de materiais educacionais mais eficazes e menos confusos." },
+            { cat: "Mayer", q: "27. Como o livro relaciona teoria e prática na construção de ambientes de Aprendizagem Multimédia eficazes?", a: "O livro demonstra a aplicação de princípios teóricos (ciência cognitiva) na melhoria prática dos ambientes de Aprendizagem Multimédia." },
+            { cat: "Mayer", q: "28. De que maneira a Aprendizagem Multimédia pode ser adaptada para diferentes estilos de aprendizagem?", a: "Discute como a personalização e a representação múltipla de conhecimentos podem atender a variados estilos de aprendizagem, focando no processamento dual." },
+            { cat: "Mayer", q: "29. Quais são os desafios futuros identificados para a investigação em Aprendizagem Multimédia?", a: "O livro identifica a necessidade de compreender melhor os mecanismos subjacentes (como a motivação e emoção) e explorar novas tecnologias educacionais." },
+            { cat: "Mayer", q: "30. Como o livro \"Multimedia Learning\" contribui para o campo da psicologia educacional?", a: "Mayer contribui oferecendo uma abordagem baseada em evidências científicas sobre como as pessoas aprendem com palavras e imagens." },
+
+            // --- APA ---
+            { cat: "APA", q: "1. O que é telepsicologia segundo as diretrizes da APA?", a: "Telepsicologia refere-se à prestação de serviços psicológicos utilizando tecnologias de telecomunicação, incluindo videoconferência, chamadas telefónicas e mensagens assíncronas, como e-mails e aplicativos móveis." },
+            { cat: "APA", q: "2. Quais são os principais benefícios da telepsicologia?", a: "A telepsicologia expande o acesso a serviços de saúde mental para indivíduos em locais remotos, reduz barreiras financeiras e logísticas, e permite a integração de tecnologias em tratamentos e avaliações." },
+            { cat: "APA", q: "3. Quais competências os psicólogos precisam desenvolver para praticar telepsicologia?", a: "Os psicólogos devem adquirir competências técnicas (uso de tecnologia), de conteúdo (base de evidências para métodos digitais) e populacionais (adaptações para grupos específicos)." },
+            { cat: "APA", q: "4. Quais os cuidados necessários para garantir a segurança de dados em telepsicologia?", a: "Implementar medidas como autenticação multifator, encriptação de dados, assinaturas de acordos com fornecedores de tecnologia e revisão regular das políticas de segurança." },
+            { cat: "APA", q: "5. Como o consentimento informado deve ser conduzido em telepsicologia?", a: "O consentimento deve incluir explicações claras sobre os serviços, riscos, benefícios, limites de confidencialidade, procedimentos de emergência e políticas de armazenamento de dados." },
+            { cat: "APA", q: "6. Quais são as melhores práticas para o uso de telepsicologia em avaliações psicológicas?", a: "Utilizar ferramentas adaptadas para o ambiente digital, documentar limitações das avaliações remotas e garantir a segurança e integridade dos materiais de teste." },
+            { cat: "APA", q: "7. Como os psicólogos podem lidar com emergências em telepsicologia?", a: "Desenvolver planos de emergência, incluindo informações sobre localização do paciente, contactos locais de emergência e protocolos para interrupções tecnológicas." },
+            { cat: "APA", q: "8. Quais são os desafios éticos associados à prática transjurisdicional em telepsicologia?", a: "Respeitar as regulamentações locais e internacionais, evitar conflitos de jurisdição e obter licenças ou permissões para atender pacientes em diferentes localidades." },
+            { cat: "APA", q: "9. Quais aspetos devem ser documentados em sessões de telepsicologia?", a: "Tecnologias utilizadas, localização do paciente, consentimento informado, planos de emergência, sucessos ou falhas técnicas e adaptação dos serviços." },
+            { cat: "APA", q: "10. Como os psicólogos podem garantir a qualidade da supervisão e treinamento em telepsicologia?", a: "Desenvolver competências específicas para telesupervisão, participar de formações contínuas, e incorporar práticas e tecnologias apropriadas à formação a distância." },
+
+            // --- EFPA ---
+            { cat: "EFPA", q: "1. Quais são os principais desafios éticos dos serviços psicológicos digitais?", a: "Os desafios incluem comunicação limitada (ausência de pistas não verbais), questões de segurança e confidencialidade dos dados, competência profissional, e implicações legais transnacionais." },
+            { cat: "EFPA", q: "2. O que os psicólogos devem considerar ao trabalhar com clientes de diferentes países?", a: "Devem compreender as diferenças culturais, atender às regulamentações legais locais e internacionais, e garantir que as expectativas do cliente estejam alinhadas com as práticas éticas." },
+            { cat: "EFPA", q: "3. Quais são os princípios gerais éticos aplicáveis a serviços psicológicos digitais?", a: "Os princípios incluem respeito pelos direitos e dignidade das pessoas, competência, responsabilidade e integridade, conforme o Meta-Código da EFPA." },
+            { cat: "EFPA", q: "4. Como deve ser garantida a segurança nos serviços digitais?", a: "Utilizar métodos de encriptação adequados, implementar autenticação multifator para acesso a informações sensíveis, e estabelecer protocolos para lidar com violações de segurança." },
+            { cat: "EFPA", q: "5. Quais cuidados os psicólogos devem ter com a confidencialidade nos serviços digitais?", a: "Informar os clientes sobre limites de confidencialidade, legislação aplicável e práticas de armazenamento de dados; garantir que terceiros não tenham acesso não autorizado às sessões." },
+            { cat: "EFPA", q: "6. O que é necessário para oferecer serviços apropriados via meios digitais?", a: "Avaliar a adequação do formato (síncrono ou assíncrono), garantir que métodos sejam baseados em evidências e adequados para o meio digital, e praticar dentro dos limites de competência." },
+            { cat: "EFPA", q: "7. Quais são as melhores práticas ao lidar com consentimento informado em serviços digitais?", a: "Obter consentimento claro e verificável, especialmente ao trabalhar com crianças ou grupos vulneráveis, e fornecer informações completas sobre a natureza e os riscos do serviço." },
+            { cat: "EFPA", q: "8. Como os psicólogos podem abordar a ansiedade dos clientes com tecnologia?", a: "Proporcionar suporte para a adaptação ao formato digital, oferecer alternativas, e assegurar que o ambiente seja seguro e acolhedor." },
+            { cat: "EFPA", q: "9. Como garantir que testes psicológicos sejam válidos em contextos digitais?", a: "Utilizar apenas testes adaptados e validados para uso online, e garantir que os métodos de aplicação sigam padrões éticos e científicos." },
+            { cat: "EFPA", q: "10. O que as associações de psicólogos devem fazer para apoiar a prática digital?", a: "Desenvolver códigos éticos específicos, oferecer formação continuada, criar registos acessíveis de profissionais qualificados e promover a pesquisa sobre práticas digitais." },
+
+            // --- OPP / IA ---
+            { cat: "OPP", q: "1. O que é Inteligência Artificial (IA) e quais são os seus principais domínios?", a: "IA refere-se a sistemas computacionais capazes de realizar tarefas que imitam ou ultrapassam a inteligência humana. Domínios: Aprendizagem Automática, Visão Computacional, Processamento de Linguagem Natural e Robótica." },
+            { cat: "OPP", q: "2. Quais são os benefícios da IA na área da Saúde Psicológica?", a: "A IA pode ajudar na prevenção e diagnóstico precoce de condições como o risco suicidário e demência, bem como no desenvolvimento de chatbots terapêuticos que oferecem suporte emocional." },
+            { cat: "OPP", q: "3. Quais os principais desafios éticos associados ao uso da IA?", a: "Envolvem a transparência dos algoritmos, enviesamentos (bias) nos sistemas, impacto na privacidade e a necessidade de regulamentação para evitar discriminação e desigualdades." },
+            { cat: "OPP", q: "4. Como a IA pode contribuir para o bem-estar no local de trabalho?", a: "A IA pode ser usada para melhorar a eficiência e auxiliar na gestão de tarefas, mas é crucial assegurar que os sistemas não perpetuam desigualdades nem causam impactos negativos na Saúde Psicológica." },
+            { cat: "OPP", q: "5. Qual a importância da diversidade no desenvolvimento de sistemas de IA?", a: "Equipes diversas ajudam a reduzir vieses nos algoritmos e promovem sistemas mais inclusivos, representando melhor a variabilidade humana." },
+            { cat: "OPP", q: "6. Que recomendações estratégicas são propostas para regulamentar a IA na Saúde Psicológica?", a: "Regulamentar tecnologias como chatbots, assegurar a privacidade dos dados, promover a formação dos profissionais e garantir a inclusão de variáveis sociais e psicológicas no design." },
+            { cat: "OPP", q: "7. Como os sistemas de IA podem beneficiar a Educação?", a: "Chatbots e ferramentas inteligentes podem personalizar a aprendizagem, criar métodos de avaliação inovadores e melhorar o acesso a recursos educacionais." },
+            { cat: "OPP", q: "8. Quais os riscos do uso de IA em sistemas de justiça?", a: "Algoritmos enviesados podem perpetuar discriminações, como no cálculo de riscos de reincidência, resultando em decisões injustas." },
+            { cat: "OPP", q: "9. Qual o impacto da IA no mercado de trabalho?", a: "A IA pode substituir tarefas repetitivas e criar novas funções, mas também pode levar a insegurança laboral e desigualdades, especialmente em setores vulneráveis." },
+            { cat: "OPP", q: "10. De que forma os psicólogos podem contribuir para a implementação ética da IA?", a: "Participando no design de sistemas, promovendo a compreensão das implicações sociais e emocionais, e assegurando que as tecnologias sejam humanamente centradas e éticas." }
+        ];
+
+        // ==========================================
+        // 2. LÓGICA DO JOGO
+        // ==========================================
+        const TAMANHO_SESSAO = 25;
+        let sessaoAtual = [];
+        let listaRevisao = [];
+        let indiceAtual = 0;
+        let score = 0;
+        let isFlipped = false;
+
+        // Elementos UI
+        const els = {
+            card: document.getElementById('flashcard'),
+            qText: document.getElementById('q-text'),
+            aText: document.getElementById('a-text'),
+            catFront: document.getElementById('cat-front'),
+            catBack: document.getElementById('cat-back'),
+            backFace: document.getElementById('card-back-face'),
+            controls: document.getElementById('controls'),
+            score: document.getElementById('score'),
+            progress: document.getElementById('progress-bar'),
+            endScreen: document.getElementById('end-screen'),
+            finalScore: document.getElementById('final-score'),
+            reviewList: document.getElementById('review-list'),
+            reviewContainer: document.getElementById('review-container'),
+            counter: document.getElementById('card-counter')
+        };
+
+        function shuffle(array) {
+            let arr = [...array];
+            for (let i = arr.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [arr[i], arr[j]] = [arr[j], arr[i]];
+            }
+            return arr;
+        }
+
+        function iniciar() {
+            // Preparar Sessão
+            const todos = shuffle(bancoCompleto);
+            sessaoAtual = todos.slice(0, TAMANHO_SESSAO);
+            
+            // Reset Variáveis
+            indiceAtual = 0;
+            score = 0;
+            listaRevisao = [];
+            isFlipped = false;
+            
+            // Reset UI
+            els.score.innerText = "0";
+            els.endScreen.style.display = 'none';
+            els.controls.classList.remove('active');
+            
+            carregarCartao();
+        }
+
+        function carregarCartao() {
+            if (indiceAtual >= sessaoAtual.length) {
+                finalizar();
+                return;
+            }
+
+            const item = sessaoAtual[indiceAtual];
+            isFlipped = false;
+            
+            // Atualizar Contador do Cabeçalho
+            els.counter.textContent = `Cartão ${indiceAtual + 1} de ${TAMANHO_SESSAO}`;
+
+            // Reset Card State
+            els.card.classList.remove('is-flipped');
+            els.controls.classList.remove('active');
+            
+            // Cores
+            let cor = "#666";
+            if(item.cat === "Mayer") cor = "var(--theme-mayer)";
+            if(item.cat === "APA") cor = "var(--theme-apa)";
+            if(item.cat === "EFPA") cor = "var(--theme-efpa)";
+            if(item.cat === "OPP") cor = "var(--theme-opp)";
+
+            // Aplicar Dados
+            els.catFront.innerText = item.cat;
+            els.catFront.style.background = cor;
+            els.qText.innerHTML = item.q;
+            
+            els.catBack.style.background = cor;
+            els.backFace.style.borderColor = cor;
+            
+            // Delay na resposta (evitar spoiler)
+            setTimeout(() => {
+                els.aText.innerHTML = item.a;
+            }, 300);
+
+            // Barra de Progresso
+            const pct = (indiceAtual / TAMANHO_SESSAO) * 100;
+            els.progress.style.width = `${pct}%`;
+        }
+
+        // Virar Cartão
+        els.card.addEventListener('click', () => {
+            if (!isFlipped) {
+                els.card.classList.add('is-flipped');
+                els.controls.classList.add('active');
+                isFlipped = true;
+            }
+        });
+
+        // Avaliar Resposta
+        window.avaliar = function(sabia) {
+            if (!isFlipped) return;
+
+            if (sabia) {
+                score += 100;
+                els.score.innerText = score;
+            } else {
+                listaRevisao.push(sessaoAtual[indiceAtual]);
+            }
+
+            indiceAtual++;
+            carregarCartao();
+        }
+
+        function finalizar() {
+            els.finalScore.innerText = score;
+            els.reviewList.innerHTML = "";
+
+            if (listaRevisao.length === 0) {
+                els.reviewContainer.innerHTML = `
+                    <div style="text-align:center; padding:30px; color:#86efac;">
+                        <h3>Perfeito! 🎉</h3>
+                        <p>Não erraste nenhuma questão.</p>
+                    </div>
+                `;
+            } else {
+                // Restaurar título se necessário
+                if(!els.reviewContainer.querySelector('h4')) {
+                    els.reviewContainer.innerHTML = `<h4 style="color:#fca5a5; margin-top:0; margin-bottom:10px; text-transform:uppercase; font-size:0.8rem; letter-spacing:1px;">Questões a Rever:</h4><div id="review-list"></div>`;
+                    els.reviewList = document.getElementById('review-list');
+                }
+                
+                listaRevisao.forEach(item => {
+                    const div = document.createElement('div');
+                    div.className = 'review-item';
+                    div.innerHTML = `
+                        <div class="review-q">${item.q}</div>
+                        <div class="review-a">${item.a}</div>
+                    `;
+                    els.reviewList.appendChild(div);
+                });
+            }
+
+            els.endScreen.style.display = 'flex';
+        }
+
+        // Iniciar ao carregar
+        document.addEventListener('DOMContentLoaded', iniciar);
+
+    </script>
+</body>
+</html>

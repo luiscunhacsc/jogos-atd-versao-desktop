@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="pt-PT">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Teoria Cognitiva de Mayer: Explicação Completa</title>
+    <style>
+        :root {
+            /* Cores Inspiradas em Psicologia Cognitiva (Foco e Calma) */
+            --primary: #2563eb;      /* Azul Foco */
+            --secondary: #059669;    /* Verde Sucesso */
+            --hypothesis: #9333ea;   /* Roxo Conceito */
+            --principle: #ea580c;    /* Laranja Aplicação */
+            --bg: #f1f5f9;
+            --text: #1e293b;
+            --surface: #ffffff;
+            
+            --transition: all 0.5s cubic-bezier(0.25, 0.8, 0.25, 1);
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            margin: 0;
+            height: 100vh;
+            width: 100vw;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* --- HEADER --- */
+        header {
+            flex-shrink: 0;
+            padding: 1rem 1.5rem;
+            background: var(--surface);
+            border-bottom: 1px solid #cbd5e1;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 10;
+        }
+
+        h1 {
+            font-size: 1.25rem;
+            color: var(--text);
+            margin: 0;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .badge {
+            background: var(--primary);
+            color: white;
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        /* --- LAYOUT PRINCIPAL (Grid) --- */
+        .main-layout {
+            flex: 1;
+            display: grid;
+            grid-template-columns: 35% 65%; /* Painel Texto | Diagrama */
+            height: calc(100vh - 60px);
+            overflow: hidden;
+        }
+
+        /* --- COLUNA ESQUERDA: NARRATIVA --- */
+        .narrative-panel {
+            background: var(--surface);
+            border-right: 1px solid #e2e8f0;
+            padding: 2rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            position: relative;
+            overflow-y: auto; /* Scroll se o texto for muito grande em ecrãs pequenos */
+        }
+
+        .step-indicator {
+            font-size: 0.85rem;
+            color: #64748b;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .title-block {
+            margin-bottom: 1.5rem;
+        }
+
+        .step-title {
+            font-size: 1.8rem;
+            color: var(--text);
+            line-height: 1.2;
+            margin: 0 0 0.5rem 0;
+            font-weight: 800;
+        }
+
+        .context-tag {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+        
+        .tag-process { background: #dbeafe; color: var(--primary); border: 1px solid #bfdbfe; }
+        .tag-hypothesis { background: #f3e8ff; color: var(--hypothesis); border: 1px solid #e9d5ff; }
+        .tag-principle { background: #ffedd5; color: var(--principle); border: 1px solid #fed7aa; }
+
+        .step-content {
+            font-size: 1.05rem;
+            line-height: 1.7;
+            color: #475569;
+        }
+
+        .step-content strong { color: var(--text); font-weight: 700; }
+        .step-content ul { padding-left: 20px; margin: 10px 0; }
+        .step-content li { margin-bottom: 8px; }
+
+        /* Caixa de Destaque (Insights) */
+        .insight-box {
+            background: #f8fafc;
+            border-left: 4px solid var(--hypothesis);
+            padding: 1rem;
+            margin-top: 1.5rem;
+            border-radius: 0 8px 8px 0;
+            font-size: 0.95rem;
+            color: #334155;
+        }
+        
+        .insight-title {
+            color: var(--hypothesis);
+            font-weight: 700;
+            display: block;
+            margin-bottom: 0.5rem;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+        }
+
+        /* --- CONTROLOS DE NAVEGAÇÃO --- */
+        .controls {
+            margin-top: 2rem;
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border-radius: 12px;
+            font-weight: 700;
+            cursor: pointer;
+            border: none;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 1rem;
+        }
+
+        .btn-prev { background: #f1f5f9; color: #64748b; }
+        .btn-prev:hover:not(:disabled) { background: #e2e8f0; color: #334155; }
+        .btn-prev:disabled { opacity: 0.5; cursor: not-allowed; }
+
+        .btn-next { background: var(--text); color: white; flex-grow: 1; justify-content: center; }
+        .btn-next:hover { background: #334155; transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+
+        /* --- COLUNA DIREITA: DIAGRAMA --- */
+        .diagram-panel {
+            background: #f8fafc;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 2rem;
+            position: relative;
+        }
+
+        /* SVG Styles */
+        svg {
+            width: 100%;
+            height: 100%;
+            max-width: 900px;
+            transition: transform 0.5s ease;
+        }
+
+        .svg-box { fill: white; stroke: #cbd5e1; stroke-width: 2; transition: var(--transition); }
+        .svg-text { font-family: 'Segoe UI', sans-serif; fill: #64748b; font-size: 14px; font-weight: 600; pointer-events: none; transition: var(--transition); }
+        .svg-arrow { stroke: #cbd5e1; stroke-width: 2; fill: none; marker-end: url(#arrowhead); transition: var(--transition); }
+        .svg-label { font-size: 11px; fill: #94a3b8; font-style: italic; opacity: 0; transition: var(--transition); }
+
+        /* Estados Ativos do Diagrama */
+        .highlight-box { fill: #eff6ff; stroke: var(--primary); stroke-width: 3; filter: drop-shadow(0 10px 15px rgba(37, 99, 235, 0.15)); }
+        .highlight-text { fill: var(--primary); font-weight: 800; }
+        .highlight-arrow { stroke: var(--principle); stroke-width: 3; marker-end: url(#arrowhead-active); }
+        .show-label { opacity: 1; fill: var(--primary); font-weight: 700; }
+
+        /* Efeito de Foco (diminui o resto) */
+        .diagram-panel.focus-mode svg > *:not(.highlight-box):not(.highlight-text):not(.highlight-arrow):not(defs) {
+            opacity: 0.3;
+        }
+
+        /* Mobile Adjustments */
+        @media (max-width: 900px) {
+            .main-layout { grid-template-columns: 1fr; grid-template-rows: 1fr 1fr; }
+            .narrative-panel { padding: 1.5rem; order: 2; border-right: none; border-top: 1px solid #e2e8f0; }
+            .diagram-panel { padding: 1rem; order: 1; background: white; }
+            .step-title { font-size: 1.4rem; }
+            h1 span { display: none; } /* Esconde texto extra no header mobile */
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>🎓 <span>Teoria Cognitiva da Aprendizagem Multimédia</span></h1>
+        <div class="step-indicator" id="progress-display">1 / 12</div>
+    </header>
+
+    <div class="main-layout">
+        
+        <div class="narrative-panel">
+            <div id="content-area">
+                </div>
+            
+            <div class="controls">
+                <button id="btn-prev" class="btn btn-prev" onclick="changeStep(-1)" disabled>←</button>
+                <button id="btn-next" class="btn btn-next" onclick="changeStep(1)">Iniciar Explicação →</button>
+            </div>
+        </div>
+
+        <div class="diagram-panel" id="diagram-container">
+            <svg viewBox="0 0 800 350" id="main-svg" preserveAspectRatio="xMidYMid meet">
+                <defs>
+                    <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+                        <polygon points="0 0, 10 3.5, 0 7" fill="#cbd5e1" />
+                    </marker>
+                    <marker id="arrowhead-active" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+                        <polygon points="0 0, 10 3.5, 0 7" fill="#ea580c" />
+                    </marker>
+                </defs>
+
+                <rect x="20" y="50" width="120" height="250" rx="10" class="svg-box" id="box-pres" fill="none" stroke-dasharray="5,5"/>
+                <text x="80" y="40" text-anchor="middle" class="svg-text">Apresentação</text>
+                <rect x="35" y="70" width="90" height="60" rx="5" class="svg-box" id="box-words" />
+                <text x="80" y="105" text-anchor="middle" class="svg-text">Palavras</text>
+                <rect x="35" y="200" width="90" height="60" rx="5" class="svg-box" id="box-pics" />
+                <text x="80" y="235" text-anchor="middle" class="svg-text">Imagens</text>
+
+                <rect x="180" y="50" width="120" height="250" rx="10" class="svg-box" id="box-sensory" />
+                <text x="240" y="40" text-anchor="middle" class="svg-text">Memória Sensorial</text>
+                <rect x="195" y="70" width="90" height="60" rx="5" class="svg-box" id="box-ears" />
+                <text x="240" y="105" text-anchor="middle" class="svg-text">Ouvidos</text>
+                <rect x="195" y="200" width="90" height="60" rx="5" class="svg-box" id="box-eyes" />
+                <text x="240" y="235" text-anchor="middle" class="svg-text">Olhos</text>
+
+                <line x1="125" y1="100" x2="185" y2="100" class="svg-arrow" id="arrow-verbal" />
+                <line x1="125" y1="230" x2="185" y2="230" class="svg-arrow" id="arrow-visual" />
+                <line x1="125" y1="100" x2="185" y2="210" class="svg-arrow" id="arrow-cross" /> <rect x="340" y="50" width="280" height="250" rx="10" class="svg-box" id="box-working" />
+                <text x="480" y="35" text-anchor="middle" class="svg-text">Memória de Trabalho</text>
+                
+                <rect x="360" y="70" width="80" height="60" rx="5" class="svg-box" id="box-sounds" />
+                <text x="400" y="105" text-anchor="middle" class="svg-text">Sons</text>
+                <rect x="360" y="200" width="80" height="60" rx="5" class="svg-box" id="box-imgs" />
+                <text x="400" y="235" text-anchor="middle" class="svg-text">Imagens</text>
+
+                <rect x="520" y="70" width="80" height="60" rx="5" class="svg-box" id="box-model-v" />
+                <text x="560" y="100" text-anchor="middle" class="svg-text" font-size="12">Modelo</text>
+                <text x="560" y="115" text-anchor="middle" class="svg-text" font-size="12">Verbal</text>
+                <rect x="520" y="200" width="80" height="60" rx="5" class="svg-box" id="box-model-p" />
+                <text x="560" y="230" text-anchor="middle" class="svg-text" font-size="12">Modelo</text>
+                <text x="560" y="245" text-anchor="middle" class="svg-text" font-size="12">Pictórico</text>
+
+                <line x1="285" y1="100" x2="350" y2="100" class="svg-arrow" id="arrow-sel-v" />
+                <text x="318" y="90" text-anchor="middle" class="svg-label" id="lbl-sel-v">Seleção</text>
+                <line x1="285" y1="230" x2="350" y2="230" class="svg-arrow" id="arrow-sel-p" />
+                <text x="318" y="220" text-anchor="middle" class="svg-label" id="lbl-sel-p">Seleção</text>
+
+                <line x1="440" y1="100" x2="510" y2="100" class="svg-arrow" id="arrow-org-v" />
+                <text x="480" y="90" text-anchor="middle" class="svg-label" id="lbl-org-v">Organização</text>
+                <line x1="440" y1="230" x2="510" y2="230" class="svg-arrow" id="arrow-org-p" />
+                <text x="480" y="220" text-anchor="middle" class="svg-label" id="lbl-org-p">Organização</text>
+
+                <line x1="600" y1="100" x2="640" y2="135" class="svg-arrow" id="arrow-int-1" />
+                <line x1="600" y1="230" x2="640" y2="165" class="svg-arrow" id="arrow-int-2" />
+                <circle cx="645" cy="150" r="8" fill="#ea580c" id="node-integrate" opacity="0"/>
+
+                <rect x="680" y="50" width="100" height="250" rx="10" class="svg-box" id="box-ltm" />
+                <text x="730" y="35" text-anchor="middle" class="svg-text" font-size="12">Longo Prazo</text>
+                
+                <rect x="690" y="120" width="80" height="60" rx="5" class="svg-box" id="box-prior" />
+                <text x="730" y="150" text-anchor="middle" class="svg-text" font-size="11">Conhecimento</text>
+                <text x="730" y="165" text-anchor="middle" class="svg-text" font-size="11">Prévio</text>
+
+                <line x1="690" y1="150" x2="655" y2="150" class="svg-arrow" id="arrow-prior" stroke-dasharray="4"/>
+            </svg>
+        </div>
+
+    </div>
+
+    <script>
+        // Dados Completos da Explicação
+        const steps = [
+            {
+                tag: "Introdução",
+                tagClass: "tag-process",
+                title: "O Modelo de Mayer",
+                content: "A imagem representa o modelo dos processos de aprendizagem multimédia. Baseia-se na ideia de que aprender não é 'absorver' dados, mas sim <strong>construir conhecimento ativamente</strong>.<br><br>Vamos dissecar este diagrama peça por peça para entenderes como funciona a mente do teu aluno.",
+                highlight: [],
+                focus: false
+            },
+            {
+                tag: "Processo: Entrada",
+                tagClass: "tag-process",
+                title: "1. Apresentação & Sentidos",
+                content: "Tudo começa aqui. O material é apresentado como <strong>Palavras</strong> (texto/narração) e <strong>Imagens</strong> (vídeo/gráfico).<br>Estes estímulos entram pelos nossos 'sensores':<br><ul><li>👂 <strong>Ouvidos:</strong> Para palavras faladas.</li><li>👀 <strong>Olhos:</strong> Para imagens e texto escrito.</li></ul>",
+                highlight: ["box-pres", "box-words", "box-pics", "box-sensory", "box-ears", "box-eyes", "arrow-verbal", "arrow-visual", "arrow-cross"],
+                focus: true
+            },
+            {
+                tag: "Hipótese Fundamental",
+                tagClass: "tag-hypothesis",
+                title: "O Canal Duplo",
+                content: "Repara como existem dois caminhos distintos? Esta é a <strong>Hipótese do Canal Duplo</strong>.<br>O cérebro humano tem canais separados para processar informação visual e verbal. As palavras e as imagens seguem trajetórias distintas nesta fase inicial.",
+                insight: "💡 <strong>Implicação:</strong> Devemos aproveitar ambos os canais, mas sem os sobrecarregar.",
+                highlight: ["box-ears", "box-eyes", "arrow-verbal", "arrow-visual"],
+                focus: true
+            },
+            {
+                tag: "Processo: Seleção",
+                tagClass: "tag-process",
+                title: "2. O Filtro da Atenção",
+                content: "Não conseguimos prestar atenção a tudo. Ocorre uma <strong>Seleção</strong>.<br>Apenas os sons e imagens relevantes passam para a fase seguinte. Se houver ruído (música alta, imagens decorativas), este processo de seleção falha.",
+                highlight: ["arrow-sel-v", "arrow-sel-p", "lbl-sel-v", "lbl-sel-p"],
+                focus: true
+            },
+            {
+                tag: "Processo: Memória de Trabalho",
+                tagClass: "tag-process",
+                title: "3. A Bancada de Trabalho",
+                content: "Os dados selecionados entram na <strong>Memória de Trabalho</strong>.<br><ul><li>Os sons tornam-se representações auditivas.</li><li>As imagens tornam-se representações visuais.</li></ul><br>Aqui ocorre a <strong>Organização Ativa</strong>: criamos um Modelo Verbal e um Modelo Pictórico coerentes.",
+                highlight: ["box-working", "box-sounds", "box-imgs", "box-model-v", "box-model-p", "arrow-org-v", "arrow-org-p", "lbl-org-v", "lbl-org-p"],
+                focus: true
+            },
+            {
+                tag: "Hipótese Fundamental",
+                tagClass: "tag-hypothesis",
+                title: "Capacidade Limitada",
+                content: "Atenção: A Memória de Trabalho é muito pequena! Esta é a <strong>Hipótese da Capacidade Limitada</strong>.<br>Só conseguimos processar poucos itens de cada vez. É fundamental evitar a sobrecarga cognitiva através de um design limpo e focado.",
+                insight: "⚠️ <strong>Perigo:</strong> Se deres demasiada informação de uma vez, o aluno 'desliga'.",
+                highlight: ["box-working"],
+                focus: true
+            },
+            {
+                tag: "Processo: Integração",
+                tagClass: "tag-process",
+                title: "4. O Momento 'Aha!'",
+                content: "Na etapa final, ocorre a magia: a <strong>Integração</strong>.<br>O cérebro conecta o Modelo Verbal com o Modelo Pictórico e com o <strong>Conhecimento Prévio</strong> (vindo da Memória de Longo Prazo).<br>É aqui que a informação solta se transforma em conhecimento duradouro.",
+                highlight: ["node-integrate", "arrow-int-1", "arrow-int-2", "box-ltm", "box-prior", "arrow-prior"],
+                focus: true
+            },
+            {
+                tag: "Princípio Prático",
+                tagClass: "tag-principle",
+                title: "Princípio Multimédia",
+                content: "Como aplicamos isto? O <strong>Princípio Multimédia</strong> diz que aprendemos melhor com palavras E imagens do que apenas com palavras.<br>Isto aproveita a estrutura de Canal Duplo que acabámos de ver.",
+                highlight: ["box-words", "box-pics", "box-working"],
+                focus: false
+            },
+            {
+                tag: "Princípio Prático",
+                tagClass: "tag-principle",
+                title: "Princípio da Coerência",
+                content: "Para proteger a Capacidade Limitada, usamos o <strong>Princípio da Coerência</strong>.<br>Devemos cortar tudo o que é irrelevante. Se não contribui para o modelo mental, é ruído e deve ser eliminado.",
+                highlight: ["arrow-sel-v", "arrow-sel-p"],
+                focus: true
+            },
+            {
+                tag: "Princípio Prático",
+                tagClass: "tag-principle",
+                title: "Princípio da Contiguidade",
+                content: "Para facilitar a Organização e Integração, usamos a <strong>Contiguidade</strong>.<br>Palavras e imagens correspondentes devem aparecer juntas (Espacial) e ao mesmo tempo (Temporal) para o cérebro não gastar energia a tentar ligá-las.",
+                highlight: ["box-model-v", "box-model-p", "node-integrate"],
+                focus: true
+            },
+            {
+                tag: "Princípio Prático",
+                tagClass: "tag-principle",
+                title: "Princípio do Pré-treino",
+                content: "Lembras-te do Conhecimento Prévio? O <strong>Pré-treino</strong> sugere que devemos ensinar os conceitos-chave antes da lição complexa. Isso 'activa' a Memória de Longo Prazo e facilita a integração.",
+                highlight: ["box-prior", "arrow-prior"],
+                focus: true
+            },
+            {
+                tag: "Conclusão",
+                tagClass: "tag-process",
+                title: "Resumo Final",
+                content: "A Teoria de Mayer mostra-nos que aprender é um processo ativo de filtrar, organizar e integrar. Como educadores, o nosso papel não é apenas 'entregar conteúdo', mas sim guiar o processamento cognitivo do aluno sem o sobrecarregar.",
+                highlight: ["box-pres", "box-sensory", "box-working", "box-ltm"],
+                focus: false
+            }
+        ];
+
+        let currentStep = 0;
+
+        // Referências DOM
+        const contentArea = document.getElementById('content-area');
+        const diagramPanel = document.getElementById('diagram-container');
+        const progressDisplay = document.getElementById('progress-display');
+        const btnPrev = document.getElementById('btn-prev');
+        const btnNext = document.getElementById('btn-next');
+
+        // Atualizar UI
+        function updateUI() {
+            const step = steps[currentStep];
+
+            // 1. Atualizar Painel Narrativo
+            contentArea.style.opacity = 0;
+            
+            setTimeout(() => {
+                contentArea.innerHTML = `
+                    <div class="title-block">
+                        <span class="context-tag ${step.tagClass}">${step.tag}</span>
+                        <h2 class="step-title">${step.title}</h2>
+                    </div>
+                    <div class="step-content">
+                        ${step.content}
+                        ${step.insight ? `<div class="insight-box"><span class="insight-title">Insight Psicológico</span>${step.insight}</div>` : ''}
+                    </div>
+                `;
+                contentArea.style.opacity = 1;
+            }, 200);
+
+            // 2. Atualizar Progresso
+            progressDisplay.innerText = `${currentStep + 1} / ${steps.length}`;
+
+            // 3. Atualizar Diagrama (Highlights)
+            resetHighlights();
+            step.highlight.forEach(id => {
+                const el = document.getElementById(id);
+                if (el) {
+                    if (el.tagName === 'rect' || el.tagName === 'circle') el.classList.add('highlight-box');
+                    if (el.tagName === 'text') el.classList.add('highlight-text');
+                    if (el.tagName === 'line') el.classList.add('highlight-arrow');
+                    
+                    // Mostrar labels específicas
+                    if (id.startsWith('lbl')) el.classList.add('show-label');
+                    // Mostrar nó de integração
+                    if (id === 'node-integrate') el.setAttribute('opacity', '1');
+                }
+            });
+
+            // 4. Modo de Foco (Dimming)
+            if (step.focus) {
+                diagramPanel.classList.add('focus-mode');
+            } else {
+                diagramPanel.classList.remove('focus-mode');
+            }
+
+            // 5. Botões
+            btnPrev.disabled = currentStep === 0;
+            btnNext.innerHTML = currentStep === steps.length - 1 ? 'Reiniciar ↺' : 'Próximo Passo →';
+        }
+
+        function resetHighlights() {
+            document.querySelectorAll('.svg-box').forEach(el => el.classList.remove('highlight-box'));
+            document.querySelectorAll('.svg-text').forEach(el => el.classList.remove('highlight-text'));
+            document.querySelectorAll('.svg-arrow').forEach(el => el.classList.remove('highlight-arrow'));
+            document.querySelectorAll('.svg-label').forEach(el => el.classList.remove('show-label'));
+            document.getElementById('node-integrate').setAttribute('opacity', '0');
+        }
+
+        window.changeStep = function(dir) {
+            currentStep += dir;
+            if (currentStep >= steps.length) currentStep = 0;
+            updateUI();
+        }
+
+        // Iniciar
+        updateUI();
+
+    </script>
+</body>
+</html>

@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="pt-PT">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Princípios de Aprendizagem Multimédia de Mayer</title>
+    <style>
+        :root {
+            --primary: #2563eb;
+            --secondary: #1e40af;
+            --bg: #f8fafc;
+            --card-bg: #ffffff;
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --accent: #3b82f6;
+            --shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background-color: var(--bg);
+            color: var(--text-main);
+            line-height: 1.6;
+        }
+
+        /* Header Styling */
+        header {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            padding: 3rem 1rem;
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            font-weight: 700;
+        }
+
+        p.subtitle {
+            font-size: 1.1rem;
+            opacity: 0.9;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        /* Main Container */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 1.5rem 3rem;
+        }
+
+        /* Grid Layout */
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+        }
+
+        /* Card Styling */
+        .card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: var(--shadow);
+            cursor: pointer;
+            transition: var(--transition);
+            border: 1px solid transparent;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1);
+            border-color: var(--accent);
+        }
+
+        .card-icon {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            background: #eff6ff;
+            padding: 0.5rem;
+            border-radius: 8px;
+        }
+
+        .card-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: var(--secondary);
+        }
+
+        .card-preview {
+            font-size: 0.95rem;
+            color: var(--text-muted);
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .read-more {
+            margin-top: auto;
+            padding-top: 1rem;
+            color: var(--primary);
+            font-weight: 600;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        /* Modal Styling */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(15, 23, 42, 0.6);
+            backdrop-filter: blur(4px);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            visibility: hidden;
+            transition: var(--transition);
+            z-index: 1000;
+            padding: 1rem;
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal {
+            background: white;
+            width: 100%;
+            max-width: 600px;
+            border-radius: 16px;
+            padding: 2rem;
+            position: relative;
+            transform: scale(0.95);
+            transition: var(--transition);
+            box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1);
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal-overlay.active .modal {
+            transform: scale(1);
+        }
+
+        .close-btn {
+            position: absolute;
+            top: 1.5rem;
+            right: 1.5rem;
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: var(--text-muted);
+            transition: 0.2s;
+        }
+
+        .close-btn:hover {
+            color: var(--text-main);
+        }
+
+        .modal-header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .modal-icon {
+            font-size: 3rem;
+        }
+
+        .modal-title {
+            font-size: 1.75rem;
+            color: var(--secondary);
+            font-weight: 700;
+        }
+
+        .modal-content h3 {
+            font-size: 1.1rem;
+            margin: 1.5rem 0 0.5rem;
+            color: var(--primary);
+        }
+
+        .definition-box {
+            background: #f1f5f9;
+            padding: 1rem;
+            border-left: 4px solid var(--accent);
+            border-radius: 0 8px 8px 0;
+            margin-bottom: 1.5rem;
+            font-style: italic;
+        }
+
+        .do-dont-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .do-box, .dont-box {
+            padding: 1rem;
+            border-radius: 8px;
+            font-size: 0.9rem;
+        }
+
+        .do-box {
+            background: #ecfdf5;
+            border: 1px solid #a7f3d0;
+            color: #065f46;
+        }
+
+        .dont-box {
+            background: #fef2f2;
+            border: 1px solid #fecaca;
+            color: #991b1b;
+        }
+
+        @media (max-width: 600px) {
+            .do-dont-grid {
+                grid-template-columns: 1fr;
+            }
+            h1 { font-size: 1.8rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>Princípios de Mayer</h1>
+        <p class="subtitle">Guia interativo para a conceção de materiais multimédia eficazes e cognitivamente eficientes.</p>
+    </header>
+
+    <div class="container">
+        <div id="cardsGrid" class="grid"></div>
+    </div>
+
+    <div id="modalOverlay" class="modal-overlay">
+        <div class="modal">
+            <button class="close-btn" onclick="fecharModal()">&times;</button>
+            <div id="modalBody">
+                </div>
+        </div>
+    </div>
+
+    <script>
+        // Dados dos Princípios (Base de Dados)
+        const principios = [
+            {
+                titulo: "Princípio Multimédia",
+                icon: "🖼️",
+                resumo: "As pessoas aprendem melhor com palavras e imagens do que apenas com palavras.",
+                definicao: "O cérebro processa informação visual e verbal por canais separados. Usar ambos reforça a aprendizagem.",
+                fazer: "Utilizar gráficos, diagramas ou vídeos relevantes juntamente com o texto explicativo.",
+                naoFazer: "Usar apenas blocos grandes de texto ou adicionar imagens puramente decorativas que não explicam nada."
+            },
+            {
+                titulo: "Contiguidade Espacial",
+                icon: "📏",
+                resumo: "As pessoas aprendem melhor quando palavras e imagens correspondentes estão próximas.",
+                definicao: "O aluno não deve gastar energia cognitiva a procurar a legenda que corresponde à imagem.",
+                fazer: "Colocar as etiquetas/legendas fisicamente próximas das partes da imagem que descrevem.",
+                naoFazer: "Colocar a imagem numa página e a explicação noutra, ou as legendas longe do gráfico."
+            },
+            {
+                titulo: "Contiguidade Temporal",
+                icon: "⏱️",
+                resumo: "As pessoas aprendem melhor quando palavras e imagens correspondentes são apresentadas simultaneamente.",
+                definicao: "A narração e a animação devem acontecer ao mesmo tempo para criar conexões mentais imediatas.",
+                fazer: "Sincronizar a voz off exatamente com o que está a acontecer na animação no ecrã.",
+                naoFazer: "Falar sobre um conceito primeiro e só mostrar a imagem/gráfico depois (ou vice-versa)."
+            },
+            {
+                titulo: "Princípio da Coerência",
+                icon: "🧹",
+                resumo: "As pessoas aprendem melhor quando material estranho é excluído.",
+                definicao: "Menos é mais. Reduzir a carga cognitiva removendo distrações.",
+                fazer: "Manter apenas o conteúdo essencial para o objetivo da aprendizagem. Design minimalista.",
+                naoFazer: "Incluir música de fundo, histórias irrelevantes ou imagens 'engraçadas' que distraem do foco."
+            },
+            {
+                titulo: "Princípio da Modalidade",
+                icon: "🎧",
+                resumo: "As pessoas aprendem melhor com imagens e narração do que com imagens e texto no ecrã.",
+                definicao: "Evita sobrecarregar o canal visual com imagens + texto. Usa o canal auditivo para as palavras.",
+                fazer: "Explicar um diagrama complexo usando a tua voz (áudio) em vez de encher o ecrã de texto.",
+                naoFazer: "Apresentar uma animação rápida e obrigar o utilizador a ler legendas grandes ao mesmo tempo."
+            },
+            {
+                titulo: "Princípio da Redundância",
+                icon: "🚫",
+                resumo: "As pessoas aprendem melhor com narração e imagens do que com narração, imagens e texto.",
+                definicao: "Não leias o texto que está no ecrã. O cérebro 'encrava' ao tentar ler e ouvir a mesma coisa simultaneamente.",
+                fazer: "Usar gráficos com narração áudio. Se houver texto, que sejam apenas tópicos chave.",
+                naoFazer: "Ler ipsis verbis os slides cheios de texto enquanto o aluno tenta ler também."
+            },
+            {
+                titulo: "Princípio da Sinalização",
+                icon: "🚩",
+                resumo: "As pessoas aprendem melhor quando há pistas que destacam a organização do material.",
+                definicao: "Guiar a atenção do aluno para o que é mais importante.",
+                fazer: "Usar setas, círculos, negrito ou mudanças de cor para destacar a parte importante da imagem.",
+                naoFazer: "Apresentar um gráfico complexo sem indicar para onde o aluno deve olhar primeiro."
+            },
+            {
+                titulo: "Princípio da Segmentação",
+                icon: "🍰",
+                resumo: "As pessoas aprendem melhor quando a lição é dividida em segmentos ao ritmo do utilizador.",
+                definicao: "Dividir conteúdo complexo em pedaços digeríveis (chunking).",
+                fazer: "Dividir um vídeo longo em capítulos curtos. Permitir que o utilizador clique em 'Próximo'.",
+                naoFazer: "Um vídeo contínuo de 1 hora sem pausas ou divisões lógicas."
+            },
+            {
+                titulo: "Princípio do Pré-treino",
+                icon: "🔑",
+                resumo: "As pessoas aprendem melhor quando conhecem os conceitos-chave antes do processo.",
+                definicao: "É difícil entender um processo complexo se ainda não se sabe o nome das peças.",
+                fazer: "Ensinar o vocabulário, definições ou componentes individuais antes de explicar como interagem.",
+                naoFazer: "Saltar diretamente para uma explicação complexa de um sistema sem definir os termos básicos."
+            },
+            {
+                titulo: "Princípio da Personalização",
+                icon: "🗣️",
+                resumo: "As pessoas aprendem melhor com um estilo de conversa informal do que formal.",
+                definicao: "Usar uma linguagem próxima cria uma ligação social que facilita a aprendizagem.",
+                fazer: "Usar 'Eu' e 'Tu'. Falar de forma acessível e simpática.",
+                naoFazer: "Usar linguagem excessivamente académica, passiva ou distante (ex: 'O sujeito deve...')."
+            },
+             {
+                titulo: "Princípio da Voz",
+                icon: "🎙️",
+                resumo: "As pessoas aprendem melhor com uma voz humana do que com uma voz robótica.",
+                definicao: "Apesar da evolução da IA, vozes naturais (ou IAs muito naturais) geram mais confiança e atenção.",
+                fazer: "Gravar a narração com um humano ou usar síntese de voz de altíssima qualidade.",
+                naoFazer: "Usar aquelas vozes robóticas antigas e monótonas de text-to-speech."
+            }
+        ];
+
+        const grid = document.getElementById('cardsGrid');
+        const modalOverlay = document.getElementById('modalOverlay');
+        const modalBody = document.getElementById('modalBody');
+
+        // Função para renderizar os cartões
+        function renderizarCartoes() {
+            grid.innerHTML = '';
+            principios.forEach((p, index) => {
+                const card = document.createElement('div');
+                card.className = 'card';
+                card.onclick = () => abrirModal(index);
+                
+                card.innerHTML = `
+                    <div class="card-icon">${p.icon}</div>
+                    <h2 class="card-title">${p.titulo}</h2>
+                    <p class="card-preview">${p.resumo}</p>
+                    <div class="read-more">Ver Detalhes <span>&rarr;</span></div>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        // Função para abrir o Modal
+        function abrirModal(index) {
+            const p = principios[index];
+            
+            modalBody.innerHTML = `
+                <div class="modal-header">
+                    <div class="modal-icon">${p.icon}</div>
+                    <div class="modal-title">${p.titulo}</div>
+                </div>
+                
+                <div class="definition-box">
+                    <strong>Resumo:</strong> ${p.resumo}
+                </div>
+                
+                <h3>🧠 O que significa?</h3>
+                <p>${p.definicao}</p>
+                
+                <div class="do-dont-grid">
+                    <div class="do-box">
+                        <strong>✅ Como aplicar:</strong><br>
+                        ${p.fazer}
+                    </div>
+                    <div class="dont-box">
+                        <strong>❌ A evitar:</strong><br>
+                        ${p.naoFazer}
+                    </div>
+                </div>
+            `;
+            
+            modalOverlay.classList.add('active');
+            document.body.style.overflow = 'hidden'; // Impede scroll no fundo
+        }
+
+        // Função para fechar o Modal
+        function fecharModal() {
+            modalOverlay.classList.remove('active');
+            document.body.style.overflow = 'auto'; // Restaura scroll
+        }
+
+        // Fechar ao clicar fora do modal
+        modalOverlay.addEventListener('click', (e) => {
+            if (e.target === modalOverlay) {
+                fecharModal();
+            }
+        });
+
+        // Fechar com a tecla ESC
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && modalOverlay.classList.contains('active')) {
+                fecharModal();
+            }
+        });
+
+        // Iniciar
+        renderizarCartoes();
+
+    </script>
+</body>
+</html>

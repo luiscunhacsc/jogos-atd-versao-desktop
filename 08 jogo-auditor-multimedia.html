@@ -1,0 +1,550 @@
+<!DOCTYPE html>
+<html lang="pt-PT">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Auditor Multimédia: Edição Completa</title>
+    <style>
+        :root {
+            --bg-dark: #1e293b;
+            --panel-bg: #334155;
+            --screen-bg: #0f172a;
+            --accent-red: #ef4444;
+            --accent-green: #10b981;
+            --accent-blue: #3b82f6;
+            --text-light: #f8fafc;
+            --text-dim: #94a3b8;
+            --safe-bottom: env(safe-area-inset-bottom, 20px);
+        }
+
+        * {
+            box-sizing: border-box;
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            user-select: none;
+        }
+
+        body {
+            margin: 0;
+            background-color: var(--bg-dark);
+            color: var(--text-light);
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        /* --- HUD SUPERIOR --- */
+        header {
+            padding: 10px 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(0,0,0,0.3);
+            border-bottom: 1px solid #475569;
+        }
+
+        .badge {
+            background: var(--accent-blue);
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        .score {
+            font-family: monospace;
+            font-size: 1.2rem;
+            color: var(--accent-green);
+        }
+
+        /* --- ECRÃ DE SIMULAÇÃO (O SLIDE) --- */
+        .viewport {
+            flex: 1;
+            padding: 10px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+        }
+
+        .slide-container {
+            width: 100%;
+            max-width: 600px;
+            aspect-ratio: 16/9;
+            background: white;
+            color: black;
+            border-radius: 8px;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 0 20px rgba(0,0,0,0.5);
+            transition: all 0.5s ease;
+        }
+
+        .slide-content {
+            padding: 15px;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+
+        .bad-slide { border: 4px solid var(--accent-red); }
+        .good-slide { border: 4px solid var(--accent-green); display: none; }
+
+        .slide-title {
+            font-weight: bold;
+            font-size: 1rem;
+            margin-bottom: 5px;
+            color: #333;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 5px;
+        }
+
+        .slide-body {
+            font-size: 0.8rem;
+            color: #555;
+            flex: 1;
+            line-height: 1.3;
+        }
+
+        /* Indicadores Visuais */
+        .audio-indicator {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: #cbd5e1;
+            padding: 5px;
+            border-radius: 50%;
+            width: 25px;
+            height: 25px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8rem;
+        }
+
+        /* --- PAINEL DE CONTROLO --- */
+        .control-panel {
+            background: var(--panel-bg);
+            padding: 10px;
+            padding-bottom: max(10px, var(--safe-bottom));
+            border-top: 2px solid #475569;
+            z-index: 10;
+        }
+
+        .instruction {
+            text-align: center;
+            margin-bottom: 8px;
+            font-size: 0.85rem;
+            color: var(--text-dim);
+        }
+
+        /* Scroll horizontal para caberem todos os botões */
+        .buttons-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr); /* 2 colunas */
+            gap: 8px;
+            max-height: 25vh;
+            overflow-y: auto;
+        }
+
+        .audit-btn {
+            background: var(--screen-bg);
+            border: 1px solid #475569;
+            color: var(--text-light);
+            padding: 10px;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            justify-content: center;
+            text-align: left;
+        }
+
+        .audit-btn:active { transform: scale(0.95); }
+        .audit-btn.correct { background: var(--accent-green); border-color: var(--accent-green); color: white; animation: pulse 0.5s; }
+        .audit-btn.wrong { background: var(--accent-red); border-color: var(--accent-red); animation: shake 0.4s; }
+        .audit-btn.disabled { opacity: 0.4; pointer-events: none; }
+
+        /* --- FEEDBACK OVERLAY --- */
+        .feedback-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(16, 185, 129, 0.98);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 20;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.5s;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .feedback-overlay.active { opacity: 1; pointer-events: auto; }
+
+        .feedback-title { font-size: 1.5rem; font-weight: 800; margin-bottom: 10px; }
+        .feedback-text { font-size: 0.9rem; margin-bottom: 20px; line-height: 1.4; }
+        
+        .next-btn {
+            background: white;
+            color: var(--accent-green);
+            border: none;
+            padding: 10px 25px;
+            font-weight: bold;
+            font-size: 1rem;
+            border-radius: 25px;
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+        }
+
+        /* --- ANIMAÇÕES --- */
+        @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-5px); } 75% { transform: translateX(5px); } }
+        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
+
+    </style>
+</head>
+
+<body>
+
+    <header>
+        <div>
+            <div class="badge">Nível <span id="level-num">1</span> / 10</div>
+        </div>
+        <div class="score" id="score-display">0 pts</div>
+    </header>
+
+    <div class="viewport">
+        <div class="slide-container" id="slide-frame">
+            
+            <div class="slide-content bad-slide" id="bad-slide">
+                <div class="audio-indicator" id="audio-icon" title="Áudio Ativo">🔊</div>
+                <div class="slide-title" id="bad-title">...</div>
+                <div class="slide-body" id="bad-body">...</div>
+                <div id="bad-visuals" style="margin-top:auto; position:relative; min-height:80px;"></div>
+            </div>
+
+            <div class="slide-content good-slide" id="good-slide">
+                <div class="slide-title" id="good-title">...</div>
+                <div class="slide-body" id="good-body">...</div>
+                <div id="good-visuals" style="margin-top:auto; position:relative; min-height:80px;"></div>
+            </div>
+
+            <div class="feedback-overlay" id="feedback">
+                <div class="feedback-title">CORRIGIDO!</div>
+                <div class="feedback-text" id="feedback-explanation">...</div>
+                <button class="next-btn" onclick="nextLevel()">Próximo &rarr;</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="control-panel">
+        <div class="instruction" id="instruction-text">Identifica a infração de Mayer:</div>
+        <div class="buttons-grid">
+            <button class="audit-btn" onclick="checkViolation('coherence')">🧹 Coerência</button>
+            <button class="audit-btn" onclick="checkViolation('redundancy')">🚫 Redundância</button>
+            <button class="audit-btn" onclick="checkViolation('spatial')">📏 Contig. Espacial</button>
+            <button class="audit-btn" onclick="checkViolation('temporal')">⏱️ Contig. Temporal</button>
+            <button class="audit-btn" onclick="checkViolation('voice')">🤖 Princípio da Voz</button>
+            <button class="audit-btn" onclick="checkViolation('personalization')">🗣️ Personalização</button>
+            <button class="audit-btn" onclick="checkViolation('signaling')">🚩 Sinalização</button>
+            <button class="audit-btn" onclick="checkViolation('modality')">👀 Modalidade</button>
+            <button class="audit-btn" onclick="checkViolation('image')">🎥 Princ. Imagem</button>
+            <button class="audit-btn" onclick="checkViolation('segmenting')">🍰 Segmentação</button>
+            <button class="audit-btn" onclick="checkViolation('pretraining')">🔑 Pré-treino</button>
+        </div>
+    </div>
+
+    <script>
+        // === BANCO DE DADOS DE 10 NÍVEIS (MAYER) ===
+        const levels = [
+            // NÍVEL 1: COERÊNCIA
+            {
+                id: 1,
+                context: "Aula: O Ciclo da Água",
+                badTitle: "O Ciclo da Água",
+                badBody: "A água evapora, condensa-se e precipita. <br><br><i>(Fundo musical: Heavy Metal)</i>",
+                badVisuals: `<div style="text-align:right; font-size:30px;">🎸🏎️ <span style="font-size:10px; display:block; color:red;">(GIFs Decorativos)</span></div>`,
+                audioIcon: "🔊🎵",
+                
+                violations: ['coherence'],
+                explanation: "<b>Violação de Coerência:</b> Material estranho (música, imagens decorativas) desvia a atenção e sobrecarrega a aprendizagem[cite: 108].",
+                
+                goodTitle: "O Ciclo da Água",
+                goodBody: "A água evapora, condensa-se e precipita.",
+                goodVisuals: `<div style="text-align:center; font-size:40px;">🌧️</div>`
+            },
+            // NÍVEL 2: REDUNDÂNCIA
+            {
+                id: 2,
+                context: "Tutorial de Excel",
+                badTitle: "Guardar Ficheiro",
+                badBody: "Clique em Ficheiro > Guardar. <br><b>Áudio:</b> 'Clique em Ficheiro, depois em Guardar.'",
+                badVisuals: `<div style="border:1px solid #ccc; padding:5px; margin-top:5px;">Menu > Save</div>`,
+                audioIcon: "🗣️📄",
+                
+                violations: ['redundancy'],
+                explanation: "<b>Violação de Redundância:</b> As pessoas aprendem melhor com Gráficos + Narração. Ler o texto exato que está no ecrã causa sobrecarga visual[cite: 110].",
+                
+                goodTitle: "Guardar Ficheiro",
+                goodBody: "<i>(Texto removido)</i>",
+                goodVisuals: `<div style="border:1px solid #ccc; padding:5px; background:#e2e8f0;">Menu > Save</div><div style="font-size:10px; margin-top:5px;">(Apenas Narração)</div>`
+            },
+            // NÍVEL 3: VOZ & PERSONALIZAÇÃO
+            {
+                id: 3,
+                context: "Segurança Laboral",
+                badTitle: "Protocolo 101",
+                badBody: "O funcionário deve usar capacete. <br><b>Voz:</b> (Robô Monótono)",
+                badVisuals: ``,
+                audioIcon: "🤖",
+                
+                violations: ['voice', 'personalization'],
+                explanation: "<b>Voz e Personalização:</b> Aprende-se melhor com voz humana e linguagem informal ('Tu deves...') em vez de formal ('O sujeito...')[cite: 117, 118].",
+                
+                goodTitle: "A Tua Segurança",
+                goodBody: "Para tua proteção, coloca o capacete.",
+                goodVisuals: `<div style="font-size:10px;">(Voz Humana Amigável)</div>`
+            },
+            // NÍVEL 4: CONTIGUIDADE ESPACIAL
+            {
+                id: 4,
+                context: "Anatomia Cerebral",
+                badTitle: "O Cérebro",
+                badBody: "Ver Legenda na pág. 2 para identificar as partes A, B e C.",
+                badVisuals: `<div style="display:flex; justify-content:space-between;"><div style="background:#ddd; width:40px; height:40px; border-radius:50%; text-align:center;">🧠</div> <div style="font-size:9px;">A: Frontal<br>B: Parietal</div></div>`,
+                audioIcon: "🔇",
+                
+                violations: ['spatial'],
+                explanation: "<b>Contiguidade Espacial:</b> Palavras e imagens correspondentes devem estar próximas para evitar que o aluno gaste energia a procurar[cite: 111].",
+                
+                goodTitle: "O Cérebro",
+                goodBody: "",
+                goodVisuals: `<div style="position:relative; width:60px; height:60px; background:#ddd; border-radius:50%; margin:0 auto;">🧠 <span style="position:absolute; right:-40px; font-size:10px;">Frontal</span></div>`
+            },
+            // NÍVEL 5: SINALIZAÇÃO
+            {
+                id: 5,
+                context: "Mapa do Metro",
+                badTitle: "Mapa da Rede",
+                badBody: "Para o Aeroporto siga a linha vermelha.",
+                badVisuals: `<div style="font-size:8px; color:#999;">(Linhas complexas todas da mesma espessura e cor cinzenta)</div>`,
+                audioIcon: "🔇",
+                
+                violations: ['signaling'],
+                explanation: "<b>Violação de Sinalização:</b> O aluno precisa de pistas (setas, destaques) para guiar a atenção no material complexo[cite: 109].",
+                
+                goodTitle: "Mapa da Rede",
+                goodBody: "",
+                goodVisuals: `<div style="border-bottom:3px solid red; width:100%; position:relative;"><span style="position:absolute; right:0; top:-15px;">🚩 Aeroporto</span></div>`
+            },
+            // NÍVEL 6: CONTIGUIDADE TEMPORAL
+            {
+                id: 6,
+                context: "Mecânica: Como funciona um Pistão",
+                badTitle: "Motor de 4 Tempos",
+                badBody: "Primeiro, ouve a explicação toda de 2 minutos. <br>Só depois vês a animação.",
+                badVisuals: `<div style="background:#333; color:white; padding:5px; text-align:center;">Vídeo Pausado</div>`,
+                audioIcon: "🗣️⏳",
+                
+                violations: ['temporal'],
+                explanation: "<b>Contiguidade Temporal:</b> A narração e a animação devem acontecer SIMULTANEAMENTE para criar conexões mentais imediatas[cite: 112].",
+                
+                goodTitle: "Motor de 4 Tempos",
+                goodBody: "A animação corre enquanto a narração explica.",
+                goodVisuals: `<div style="background:#10b981; color:white; padding:5px; text-align:center;">Animação Sincronizada ▶️</div>`
+            },
+            // NÍVEL 7: PRINCÍPIO DA IMAGEM
+            {
+                id: 7,
+                context: "Aula Online de Matemática",
+                badTitle: "Equações Lineares",
+                badBody: "A fórmula está atrás da minha cabeça.",
+                badVisuals: `<div style="position:relative; border:1px solid #ccc; height:60px;"><div style="position:absolute; bottom:0; right:0; width:50px; height:50px; background:black; color:white; display:flex; align-items:center; justify-content:center;">👨‍🏫</div><span style="position:absolute; top:10px; left:10px;">x = 2y...</span></div>`,
+                audioIcon: "🔊",
+                
+                violations: ['image'],
+                explanation: "<b>Princípio da Imagem:</b> A cara do orador no ecrã não melhora necessariamente a aprendizagem e pode tapar ou distrair do conteúdo visual importante[cite: 118].",
+                
+                goodTitle: "Equações Lineares",
+                goodBody: "",
+                goodVisuals: `<div style="position:relative; border:1px solid #ccc; height:60px; display:flex; align-items:center; justify-content:center; font-size:20px;">x = 2y + 4</div>`
+            },
+            // NÍVEL 8: MODALIDADE
+            {
+                id: 8,
+                context: "Funcionamento do Coração",
+                badTitle: "Sistema Cardíaco",
+                badBody: "<i>(Animação rápida do coração a bater)</i><br><span style='font-size:9px'>Texto longo no fundo a explicar: 'A sístole ocorre quando...' (O aluno tenta ler e ver a animação ao mesmo tempo)</span>",
+                badVisuals: `<div style="font-size:30px; text-align:center; animation:pulse 1s infinite;">❤️</div>`,
+                audioIcon: "🔇",
+                
+                violations: ['modality'],
+                explanation: "<b>Princípio da Modalidade:</b> Deve-se usar Imagens + Áudio em vez de Imagens + Texto, para não sobrecarregar o canal visual[cite: 115].",
+                
+                goodTitle: "Sistema Cardíaco",
+                goodBody: "<i>(Texto removido)</i>",
+                goodVisuals: `<div style="font-size:30px; text-align:center;">❤️</div><div style="font-size:10px;">(Narração áudio explica o movimento)</div>`
+            },
+            // NÍVEL 9: SEGMENTAÇÃO
+            {
+                id: 9,
+                context: "Procedimento Cirúrgico Complexo",
+                badTitle: "Cirurgia Passo-a-Passo",
+                badBody: "Vídeo contínuo de 45 minutos sem pausas.",
+                badVisuals: `<div style="background:#555; height:5px; width:100%;"></div><div style="font-size:9px;">00:15 / 45:00 (Sem Capítulos)</div>`,
+                audioIcon: "🔊",
+                
+                violations: ['segmenting'],
+                explanation: "<b>Princípio da Segmentação:</b> Conteúdos complexos devem ser divididos em pedaços pequenos com controlo do utilizador (botão 'Continuar')[cite: 113].",
+                
+                goodTitle: "Cirurgia Passo-a-Passo",
+                goodBody: "Passo 1 Concluído.",
+                goodVisuals: `<button style="padding:5px; background:#3b82f6; color:white; border:none; border-radius:4px;">Próximo Passo &rarr;</button>`
+            },
+            // NÍVEL 10: PRÉ-TREINO
+            {
+                id: 10,
+                context: "Engenharia Mecânica",
+                badTitle: "Sistema de Transmissão",
+                badBody: "Hoje vamos ver como o diferencial bloqueia o semieixo. (O aluno não sabe o que é um semieixo).",
+                badVisuals: `<div style="font-size:20px;">⚙️❓</div>`,
+                audioIcon: "🔊",
+                
+                violations: ['pretraining'],
+                explanation: "<b>Princípio do Pré-treino:</b> É preciso ensinar os nomes e características dos componentes chave ANTES de explicar o processo complexo[cite: 114].",
+                
+                goodTitle: "Conceitos Básicos",
+                goodBody: "Primeiro: Isto é um Semieixo. Isto é um Diferencial.",
+                goodVisuals: `<div style="display:flex; gap:10px; font-size:10px;"><div style="border:1px solid green; padding:2px;">Semieixo</div><div style="border:1px solid green; padding:2px;">Diferencial</div></div>`
+            }
+        ];
+
+        // === ESTADO DO JOGO ===
+        let currentLevelIndex = 0;
+        let score = 0;
+
+        // Referências DOM
+        const badSlide = document.getElementById('bad-slide');
+        const goodSlide = document.getElementById('good-slide');
+        const instructionText = document.getElementById('instruction-text');
+        const feedbackOverlay = document.getElementById('feedback');
+        
+        function initGame() {
+            currentLevelIndex = 0;
+            score = 0;
+            updateScore();
+            loadLevel(0);
+        }
+
+        function loadLevel(index) {
+            if (index >= levels.length) {
+                // Fim do Jogo
+                document.getElementById('slide-frame').innerHTML = `
+                    <div style="padding:40px; text-align:center; color:#333;">
+                        <h1 style="font-size:2rem; margin-bottom:10px;">🏆 Auditoria Completa!</h1>
+                        <p style="font-size:1rem;">Dominaste os 12 Princípios de Mayer.</p>
+                        <p style="font-size:1.5rem; color:#10b981; font-weight:bold; margin:20px 0;">${score} pts</p>
+                        <button class="next-btn" style="background:var(--bg-dark); color:white;" onclick="location.reload()">Reiniciar</button>
+                    </div>
+                `;
+                document.querySelector('.control-panel').style.display = 'none';
+                return;
+            }
+
+            const level = levels[index];
+            
+            // Reset UI
+            badSlide.style.display = 'flex';
+            goodSlide.style.display = 'none';
+            feedbackOverlay.classList.remove('active');
+            document.getElementById('level-num').innerText = index + 1;
+            
+            // Reset Botões
+            document.querySelectorAll('.audit-btn').forEach(btn => {
+                btn.className = 'audit-btn'; // Remove classes extra
+                btn.disabled = false;
+            });
+
+            // Preencher Slide "Mau"
+            document.getElementById('bad-title').innerText = level.badTitle;
+            document.getElementById('bad-body').innerHTML = level.badBody;
+            document.getElementById('bad-visuals').innerHTML = level.badVisuals;
+            document.getElementById('audio-icon').innerText = level.audioIcon;
+            
+            instructionText.innerText = `Contexto: ${level.context}`;
+        }
+
+        function checkViolation(type) {
+            const level = levels[currentLevelIndex];
+            // Encontrar botão clicado
+            const btn = document.querySelector(`button[onclick="checkViolation('${type}')"]`);
+            
+            if (level.violations.includes(type)) {
+                // Correto!
+                btn.classList.add('correct');
+                score += 100;
+                updateScore();
+                completeLevel(level);
+            } else {
+                // Errado!
+                btn.classList.add('wrong');
+                score -= 20;
+                updateScore();
+                setTimeout(() => btn.classList.remove('wrong'), 500);
+            }
+        }
+
+        function completeLevel(level) {
+            // Desativar todos os botões
+            document.querySelectorAll('.audit-btn').forEach(btn => {
+                btn.disabled = true;
+                if(!btn.classList.contains('correct')) btn.classList.add('disabled');
+            });
+            
+            instructionText.innerText = "A corrigir slide...";
+
+            setTimeout(() => {
+                // Trocar Slides
+                badSlide.style.display = 'none';
+                goodSlide.style.display = 'flex';
+                
+                // Preencher Slide "Bom"
+                document.getElementById('good-title').innerText = level.goodTitle;
+                document.getElementById('good-body').innerHTML = level.goodBody;
+                document.getElementById('good-visuals').innerHTML = level.goodVisuals;
+
+                // Mostrar Feedback
+                setTimeout(() => {
+                    document.getElementById('feedback-explanation').innerHTML = level.explanation;
+                    feedbackOverlay.classList.add('active');
+                }, 600);
+
+            }, 500);
+        }
+
+        function nextLevel() {
+            currentLevelIndex++;
+            loadLevel(currentLevelIndex);
+        }
+
+        function updateScore() {
+            document.getElementById('score-display').innerText = score + " pts";
+        }
+
+        // Iniciar
+        initGame();
+
+    </script>
+</body>
+</html>

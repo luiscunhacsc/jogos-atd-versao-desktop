@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="pt-PT">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Infográfico Interativo: 12 Princípios de Mayer (TCAM)</title>
+    <style>
+        :root {
+            --bg-body: #0f172a;
+            --text-light: #f8fafc;
+            --text-dim: #94a3b8;
+            
+            /* Cores das Categorias */
+            --cat1-color: #3b82f6; /* Azul - Reduzir Estranho */
+            --cat2-color: #10b981; /* Verde - Gerir Essencial */
+            --cat3-color: #f59e0b; /* Laranja - Fomentar Gerativo */
+
+            --card-bg: rgba(30, 41, 59, 0.7);
+            --card-border: rgba(255, 255, 255, 0.1);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            background-color: var(--bg-body);
+            background-image: radial-gradient(circle at top right, rgba(59, 130, 246, 0.2), transparent 40%),
+                              radial-gradient(circle at bottom left, rgba(16, 185, 129, 0.1), transparent 40%);
+            color: var(--text-light);
+            padding: 2rem;
+            min-height: 100vh;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+            background: linear-gradient(to right, #fff, #cbd5e1);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+
+        .subtitle { color: var(--text-dim); font-size: 1.1rem; max-width: 800px; margin: 0 auto; }
+
+        /* Main Grid Layout */
+        .main-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        /* Section Styles */
+        .category-section {
+            background: rgba(255,255,255,0.03);
+            border-radius: 20px;
+            padding: 1.5rem;
+            border: 1px solid var(--card-border);
+        }
+
+        .cat-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--card-border);
+        }
+        
+        .cat-icon { font-size: 1.5rem; margin-right: 10px; }
+        .cat-title { font-size: 1.2rem; font-weight: 700; }
+
+        /* Card Grid within Sections */
+        .cards-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 1rem;
+        }
+
+        /* Interactive Card Styles */
+        .principle-card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 12px;
+            padding: 1.2rem;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            position: relative;
+            overflow: hidden;
+            backdrop-filter: blur(10px);
+        }
+
+        .principle-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 20px -10px rgba(0,0,0,0.5);
+            border-color: rgba(255,255,255,0.3);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .card-num { font-weight: 800; opacity: 0.5; margin-right: 10px; }
+        .card-title { font-weight: 700; font-size: 1.05rem; flex-grow: 1; }
+        .toggle-icon { transition: transform 0.3s; font-size: 0.8rem; opacity: 0.7; }
+
+        .card-summary {
+            margin-top: 0.8rem;
+            font-size: 0.9rem;
+            color: var(--text-dim);
+            line-height: 1.4;
+        }
+
+        /* Expanded Content States */
+        .card-details {
+            max-height: 0;
+            opacity: 0;
+            overflow: hidden;
+            transition: all 0.4s ease;
+        }
+
+        .principle-card.active {
+            background: rgba(40, 55, 75, 0.9);
+            border-color: rgba(255,255,255,0.4);
+            box-shadow: 0 15px 30px -10px rgba(0,0,0,0.6);
+        }
+
+        .principle-card.active .card-details {
+            max-height: 300px; /* Altura suficiente para o conteúdo */
+            opacity: 1;
+            margin-top: 1.5rem;
+            padding-top: 1.5rem;
+            border-top: 1px solid var(--card-border);
+        }
+
+        .principle-card.active .toggle-icon { transform: rotate(180deg); }
+
+        /* Visual Do's and Don'ts */
+        .visual-comparison {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .visual-block {
+            flex: 1;
+            background: rgba(0,0,0,0.2);
+            padding: 10px;
+            border-radius: 8px;
+            text-align: center;
+            font-size: 0.85rem;
+        }
+
+        .visual-icon { font-size: 1.5rem; margin-bottom: 5px; display: block; }
+        .do { border-top: 3px solid #10b981; }
+        .dont { border-top: 3px solid #ef4444; opacity: 0.7; }
+
+        /* Category Specific Colors */
+        .cat-1 .cat-title, .cat-1 .card-num { color: var(--cat1-color); }
+        .cat-2 .cat-title, .cat-2 .card-num { color: var(--cat2-color); }
+        .cat-3 .cat-title, .cat-3 .card-num { color: var(--cat3-color); }
+        
+        .cat-1 .principle-card.active { border-left: 4px solid var(--cat1-color); }
+        .cat-2 .principle-card.active { border-left: 4px solid var(--cat2-color); }
+        .cat-3 .principle-card.active { border-left: 4px solid var(--cat3-color); }
+
+
+        @media (max-width: 768px) {
+            body { padding: 1rem; }
+            h1 { font-size: 2rem; }
+            .main-container { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>Os 12 Princípios de Mayer (TCAM)</h1>
+        <p class="subtitle">Guia Visual Interativo para a Teoria Cognitiva da Aprendizagem Multimédia. Clica nos cartões para explorar cada princípio.</p>
+    </header>
+
+    <main class="main-container" id="infographic-container">
+        </main>
+
+    <script>
+        // Dados dos Princípios (Organizados por Categoria)
+        const data = [
+            {
+                title: "Reduzir Processamento Estranho",
+                icon: "🗑️",
+                cssClass: "cat-1",
+                principles: [
+                    { id: 1, title: "Coerência", summary: "Excluir material estranho (sons, imagens, palavras irrelevantes).", 
+                      do: "Apenas texto e imagens essenciais ao objetivo de aprendizagem.", 
+                      dont: "Música de fundo, imagens decorativas, detalhes sedutores." },
+                    { id: 2, title: "Sinalização", summary: "Destacar a organização do material essencial com pistas.", 
+                      do: "Usar setas, negrito, cabeçalhos e entoação vocal para guiar a atenção.", 
+                      dont: "Apresentar um bloco de texto uniforme sem destaques visuais." },
+                    { id: 3, title: "Redundância", summary: "Não apresentar a mesma informação em texto e narração simultâneos.", 
+                      do: "Gráficos + Narração (Áudio).", 
+                      dont: "Gráficos + Narração + Texto idêntico no ecrã (sobrecarga)." },
+                    { id: 4, title: "Contiguidade Espacial", summary: "Apresentar palavras e imagens correspondentes fisicamente próximas.", 
+                      do: "Legenda colocada diretamente ao lado ou sobre a parte da imagem a que se refere.", 
+                      dont: "Imagem numa página e a explicação em texto noutra página distante." },
+                    { id: 5, title: "Contiguidade Temporal", summary: "Apresentar palavras e imagens correspondentes simultaneamente.", 
+                      do: "A narração explica o gráfico no exato momento em que ele aparece.", 
+                      dont: "Mostrar a imagem primeiro e só depois apresentar a explicação verbal." }
+                ]
+            },
+            {
+                title: "Gerir Processamento Essencial",
+                icon: "🧠",
+                cssClass: "cat-2",
+                principles: [
+                    { id: 6, title: "Segmentação", summary: "Dividir a lição em segmentos geríveis ao ritmo do utilizador.", 
+                      do: "Vídeo curto com botão 'Continuar' após cada conceito chave.", 
+                      dont: "Um vídeo contínuo de 30 minutos sem pausas controláveis." },
+                    { id: 7, title: "Pré-treino", summary: "Ensinar nomes e características dos conceitos principais antes da lição.", 
+                      do: "Um glossário visual ou introdução aos termos antes da explicação complexa.", 
+                      dont: "Explicar um processo complexo usando termos que o aluno ainda não conhece." },
+                    { id: 8, title: "Modalidade", summary: "Usar visuais e áudio é melhor que visuais e texto no ecrã.", 
+                      do: "Animação explicada por uma narração de voz.", 
+                      dont: "Animação explicada por longos blocos de texto no fundo do ecrã." }
+                ]
+            },
+            {
+                title: "Fomentar Processamento Gerativo",
+                icon: "🚀",
+                cssClass: "cat-3",
+                principles: [
+                    { id: 9, title: "Multimédia", summary: "Usar palavras e imagens é melhor do que apenas palavras.", 
+                      do: "Texto acompanhado de um diagrama explicativo ou foto relevante.", 
+                      dont: "Apenas longos parágrafos de texto sem qualquer apoio visual." },
+                    { id: 10, title: "Personalização", summary: "Usar um estilo de linguagem conversacional (eu/tu).", 
+                      do: "\"Nesta lição, tu vais aprender como...\"", 
+                      dont: "\"O sujeito deverá adquirir conhecimentos sobre...\" (Formal)" },
+                    { id: 11, title: "Voz", summary: "Usar uma voz humana amigável em vez de uma voz robótica.", 
+                      do: "Narração feita por uma pessoa real com entoação natural.", 
+                      dont: "Narração gerada por software text-to-speech antigo e monótono." },
+                    { id: 12, title: "Imagem", summary: "A imagem do orador no ecrã não melhora necessariamente a aprendizagem.", 
+                      do: "Focar o ecrã no conteúdo (slides, demonstração) enquanto o orador narra.", 
+                      dont: "Ter uma 'cabeça falante' num canto que distrai do conteúdo visual principal." }
+                ]
+            }
+        ];
+
+        const container = document.getElementById('infographic-container');
+
+        // Gerar HTML
+        data.forEach(category => {
+            const section = document.createElement('section');
+            section.className = `category-section ${category.cssClass}`;
+            
+            section.innerHTML = `
+                <div class="cat-header">
+                    <span class="cat-icon">${category.icon}</span>
+                    <h2 class="cat-title">${category.title}</h2>
+                </div>
+                <div class="cards-grid">
+                    ${category.principles.map(p => `
+                        <div class="principle-card" onclick="toggleCard(this)">
+                            <div class="card-header">
+                                <div>
+                                    <span class="card-num">#${p.id}</span>
+                                    <span class="card-title">${p.title}</span>
+                                </div>
+                                <span class="toggle-icon">▼</span>
+                            </div>
+                            <div class="card-summary">${p.summary}</div>
+                            <div class="card-details">
+                                <div class="visual-comparison">
+                                    <div class="visual-block do">
+                                        <span class="visual-icon">✅ Fazer</span>
+                                        ${p.do}
+                                    </div>
+                                    <div class="visual-block dont">
+                                        <span class="visual-icon">❌ Evitar</span>
+                                        ${p.dont}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+            container.appendChild(section);
+        });
+
+        // Lógica de Interatividade (Acordeão)
+        function toggleCard(element) {
+            // Fecha todos os outros cartões primeiro para manter o layout limpo
+            const allCards = document.querySelectorAll('.principle-card');
+            allCards.forEach(card => {
+                if (card !== element && card.classList.contains('active')) {
+                    card.classList.remove('active');
+                }
+            });
+
+            // Alterna o cartão clicado
+            element.classList.toggle('active');
+        }
+
+    </script>
+</body>
+</html>

@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="pt-PT">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NeuroQuiz 2025-26 | Banco Completo</title>
+    <style>
+        /* --- DESIGN SYSTEM (Glassmorphism) --- */
+        :root {
+            --bg-gradient: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #312e81 100%);
+            --glass-bg: rgba(30, 41, 59, 0.85);
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --primary: #818cf8;
+            --primary-hover: #6366f1;
+            --success: #10b981;
+            --error: #ef4444;
+            --warning: #f59e0b;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background: var(--bg-gradient);
+            background-size: 200% 200%;
+            animation: gradientBG 20s ease infinite;
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        @keyframes gradientBG {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .glass-container {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 24px;
+            padding: 2.5rem;
+            width: 100%;
+            max-width: 950px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            position: relative;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 800;
+            margin-bottom: 0.5rem;
+            background: linear-gradient(to right, #e0e7ff, #818cf8);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            text-align: center;
+        }
+
+        .subtitle { color: var(--text-muted); font-size: 1.1rem; margin-bottom: 2rem; text-align: center; }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary), var(--primary-hover));
+            color: white;
+            border: none;
+            padding: 16px 40px;
+            font-size: 1.1rem;
+            border-radius: 12px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.2s;
+            box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3);
+            width: 100%;
+            max-width: 300px;
+            display: block;
+            margin: 1rem auto;
+        }
+
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(99, 102, 241, 0.5); }
+
+        .game-hud { display: flex; justify-content: space-between; margin-bottom: 1rem; font-weight: 600; color: var(--text-muted); }
+        
+        .timer-track { width: 100%; height: 6px; background: rgba(255,255,255,0.1); border-radius: 10px; overflow: hidden; margin-bottom: 2rem; }
+        .timer-fill { height: 100%; background: var(--primary); width: 100%; transition: width 1s linear; border-radius: 10px; }
+
+        .category-badge {
+            display: inline-block; padding: 4px 12px; border-radius: 20px;
+            font-size: 0.75rem; font-weight: 800; text-transform: uppercase;
+            margin-bottom: 1rem; letter-spacing: 1px;
+        }
+
+        .question-text {
+            font-size: 1.3rem; line-height: 1.5; margin-bottom: 2rem; font-weight: 600;
+            min-height: 60px; display: flex; align-items: center;
+        }
+
+        .options-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+
+        .option-card {
+            background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 1.25rem; border-radius: 16px; color: var(--text-main);
+            cursor: pointer; transition: all 0.2s; font-size: 0.95rem; line-height: 1.4;
+        }
+
+        .option-card:hover:not(.disabled) { background: rgba(255, 255, 255, 0.1); border-color: var(--primary); transform: translateY(-2px); }
+        
+        .option-card.correct { background: rgba(16, 185, 129, 0.2); border-color: var(--success); }
+        .option-card.wrong { background: rgba(239, 68, 68, 0.2); border-color: var(--error); opacity: 0.6; }
+
+        .feedback-box {
+            margin-top: 1.5rem; padding: 1.5rem; background: rgba(0, 0, 0, 0.3);
+            border-radius: 12px; border-left: 4px solid; animation: fadeIn 0.3s ease;
+        }
+
+        .hidden { display: none !important; }
+        .disabled { pointer-events: none; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        
+        @media (max-width: 768px) { .options-grid { grid-template-columns: 1fr; } .question-text { font-size: 1.1rem; } }
+    </style>
+</head>
+<body>
+
+    <div class="glass-container">
+        
+        <div id="screen-start">
+            <h1>🧠 NeuroQuiz 2025-26</h1>
+            <p class="subtitle">Banco Completo: Mayer (30), APA (10), EFPA (10), OPP (10)</p>
+            
+            <div style="background: rgba(255,255,255,0.05); padding: 1.5rem; border-radius: 16px; margin: 2rem 0; border: 1px solid rgba(255,255,255,0.1);">
+                <ul style="list-style: none; color: #cbd5e1; line-height: 2;">
+                    <li>📚 <strong>Total de Questões:</strong> 60 Perguntas (Baseadas no PDF).</li>
+                    <li>🎲 <strong>Modo de Jogo:</strong> 20 Perguntas Aleatórias por Sessão.</li>
+                    <li>⏱️ <strong>Tempo:</strong> 30 Segundos por questão.</li>
+                    <li>🔄 <strong>Rejogabilidade:</strong> Joga várias vezes para cobrir toda a matéria.</li>
+                </ul>
+            </div>
+
+            <button id="btn-start" class="btn-primary">Iniciar Teste</button>
+        </div>
+
+        <div id="screen-game" class="hidden">
+            <div class="game-hud">
+                <span id="hud-progress">Questão 1 / 20</span>
+                <span id="hud-score">Score: 0</span>
+            </div>
+            <div class="timer-track"><div id="timer-bar" class="timer-fill"></div></div>
+
+            <span id="q-category" class="category-badge" style="background: #666;">Categoria</span>
+            <div id="q-text" class="question-text">A carregar...</div>
+            <div id="q-options" class="options-grid"></div>
+            <div id="feedback-area" class="feedback-box hidden"></div>
+            <button id="btn-next" class="btn-primary hidden" style="margin-top: 1.5rem;">Próxima Questão &rarr;</button>
+        </div>
+
+        <div id="screen-end" class="hidden" style="text-align: center;">
+            <div style="font-size: 4rem; margin-bottom: 1rem;">🏁</div>
+            <h1>Resultado Final</h1>
+            <div style="font-size: 5rem; font-weight: 800; color: var(--success); margin: 1rem 0;" id="final-score">0</div>
+            <p id="final-msg" style="font-size: 1.25rem; margin-bottom: 3rem; color: #e2e8f0;"></p>
+            <button id="btn-restart" class="btn-primary">Jogar Novamente</button>
+        </div>
+    </div>
+
+    <script>
+        // ==========================================
+        // BANCO DE DADOS COMPLETO (60 QUESTÕES DO PDF)
+        // ==========================================
+        const bancoCompleto = [
+            // --- MAYER (1-30) --- [cite: 58-87, 89-131]
+            { cat: "Mayer", text: "Qual é a principal tese do livro 'Multimedia Learning'?", opts: ["As pessoas aprendem mais profundamente com palavras e imagens do que apenas com palavras.", "Apenas imagens garantem a aprendizagem.", "O texto isolado é superior.", "A multimédia serve para decorar."], corr: 0, expl: "A tese é que a combinação de canais (verbal + visual) promove aprendizagem profunda[cite: 90]." },
+            { cat: "Mayer", text: "Como o autor define 'Instrução Multimédia'?", opts: ["Apresentação de material usando palavras e imagens para promover aprendizagem.", "Uso exclusivo de vídeo.", "Uso de computadores na sala de aula.", "Ensino à distância."], corr: 0, expl: "É definida como a apresentação de material usando palavras e imagens com intenção instrutiva[cite: 91]." },
+            { cat: "Mayer", text: "Quais são os três pressupostos da Teoria Cognitiva da Aprendizagem Multimédia?", opts: ["Canal Duplo, Capacidade Limitada, Processamento Ativo.", "Memória Infinita, Canal Único, Passividade.", "Reforço, Repetição, Condicionamento.", "Visual, Auditivo, Cinestésico."], corr: 0, expl: "Baseia-se no processamento por dois canais, capacidade limitada e envolvimento ativo [cite: 92-96]." },
+            { cat: "Mayer", text: "O que propõe a Hipótese do Canal Duplo?", opts: ["O cérebro tem canais separados para processar informação visual e verbal.", "O cérebro processa tudo num único canal.", "Temos dois cérebros independentes.", "A audição é o canal principal."], corr: 0, expl: "Existem dois canais distintos para processar informações visuais e verbais[cite: 94, 97]." },
+            { cat: "Mayer", text: "Como a Capacidade Limitada afeta a aprendizagem?", opts: ["Restringe a quantidade de informação processável simultaneamente.", "Impede a aprendizagem de conceitos abstratos.", "Significa que a memória enche rapidamente.", "Não afeta a multimédia."], corr: 0, expl: "Cada canal tem limites; sobrecarregá-los prejudica a eficiência da aprendizagem[cite: 95, 98]." },
+            { cat: "Mayer", text: "O que afirma a Hipótese do Processamento Ativo?", opts: ["A aprendizagem eficaz ocorre quando o aprendiz organiza e integra ativamente a informação.", "O aluno deve ouvir passivamente.", "A aprendizagem acontece durante o sono.", "Basta olhar para as imagens."], corr: 0, expl: "Envolve selecionar, organizar e integrar a informação em estruturas mentais coerentes[cite: 96, 99]." },
+            { cat: "Mayer", text: "Quais os três tipos de Carga Cognitiva na aprendizagem multimédia?", opts: ["Extrínseca, Intrínseca e Gerativa.", "Visual, Auditiva e Tátil.", "Primária, Secundária e Terciária.", "Leve, Moderada e Pesada."], corr: 0, expl: "Extrínseca (inútil), Intrínseca (complexidade do material) e Gerativa (integração) [cite: 100-105]." },
+            { cat: "Mayer", text: "Como facilitar a aprendizagem reduzindo o processamento irrelevante?", opts: ["Eliminando elementos distrativos e focando no essencial.", "Aumentando a complexidade.", "Adicionando música de fundo.", "Usando cores vibrantes em tudo."], corr: 0, expl: "Simplificar o design e eliminar o acessório minimiza a sobrecarga cognitiva[cite: 106]." },
+            { cat: "Mayer", text: "O que defende o Princípio da Coerência?", opts: ["Excluir material estranho ou irrelevante melhora a aprendizagem.", "Incluir detalhes curiosos ajuda.", "A música melhora sempre a atenção.", "Mais informação é sempre melhor."], corr: 0, expl: "A aprendizagem é melhor quando sons, imagens e palavras irrelevantes são excluídos[cite: 108]." },
+            { cat: "Mayer", text: "O que é o Princípio do Sinal (Signaling)?", opts: ["Usar pistas para guiar a atenção do aprendiz para o importante.", "Usar sinais de trânsito.", "Apitar quando o aluno erra.", "Fazer gestos no vídeo."], corr: 0, expl: "Destaques, setas ou falas guiam a atenção e facilitam a retenção[cite: 109]." },
+            { cat: "Mayer", text: "O que sugere o Princípio da Redundância?", opts: ["Informação idêntica em texto e narração simultâneos sobrecarrega.", "Repetir tudo três vezes.", "Ter backups da informação.", "Ler o texto do slide ajuda o aluno."], corr: 0, expl: "Texto e narração idênticos competem pelos recursos cognitivos, sendo menos eficazes[cite: 110]." },
+            { cat: "Mayer", text: "Como o Princípio da Contiguidade Espacial melhora a aprendizagem?", opts: ["Colocando palavras e imagens correspondentes próximas.", "Separando texto e imagem.", "Colocando legendas no final do livro.", "Usando letras grandes."], corr: 0, expl: "A proximidade física facilita a associação e evita o scanning visual desnecessário[cite: 111]." },
+            { cat: "Mayer", text: "O Princípio da Contiguidade Temporal defende que...", opts: ["Explicações verbais e imagens devem ser simultâneas.", "Deve haver um atraso entre som e imagem.", "Primeiro o texto, depois a imagem.", "A imagem deve vir antes do som."], corr: 0, expl: "A apresentação simultânea favorece a integração mental imediata[cite: 112]." },
+            { cat: "Mayer", text: "O que é o Princípio da Segmentação?", opts: ["Dividir o conteúdo em partes geríveis ao ritmo do utilizador.", "Apresentar tudo de uma vez.", "Impedir pausas.", "Dividir o ecrã em quatro."], corr: 0, expl: "Quebrar conteúdo em segmentos menores (chunking) ajuda a gerir a carga cognitiva[cite: 113]." },
+            { cat: "Mayer", text: "Como o Princípio do Pré-treino auxilia a aprendizagem?", opts: ["Ensinar conceitos-chave antes do conteúdo principal.", "Fazer testes antes da aula.", "Treinar o uso do rato.", "Não dar introduções."], corr: 0, expl: "Conhecer os componentes previamente liberta recursos para entender as interações depois[cite: 114]." },
+            { cat: "Mayer", text: "Qual é o Princípio da Modalidade?", opts: ["Usar visuais e áudio é melhor que visuais e texto no ecrã.", "Usar apenas texto.", "Usar apenas áudio.", "Usar todos os sentidos."], corr: 0, expl: "A narração (áudio) liberta o canal visual para processar as imagens[cite: 115]." },
+            { cat: "Mayer", text: "O Princípio Multimédia afirma que...", opts: ["Aprende-se melhor com palavras e imagens do que só com palavras.", "Aprende-se melhor só com vídeo.", "O texto é suficiente.", "As imagens distraem."], corr: 0, expl: "A combinação de representações verbais e pictóricas é mais eficaz[cite: 116]." },
+            { cat: "Mayer", text: "O que é o Princípio da Personalização?", opts: ["Usar linguagem conversacional e amigável.", "Usar linguagem formal.", "Ser autoritário.", "Falar na terceira pessoa."], corr: 0, expl: "O estilo de conversa cria uma ligação social que motiva o esforço cognitivo[cite: 117]." },
+            { cat: "Mayer", text: "Como o Princípio da Voz influencia a aprendizagem?", opts: ["Vozes humanas e naturais são mais eficazes que robóticas.", "A voz deve ser monótona.", "Não deve haver voz.", "Sotaques estrangeiros ajudam."], corr: 0, expl: "A qualidade e humanização da voz impactam positivamente a resposta social do aluno[cite: 118]." },
+            { cat: "Mayer", text: "Que evidências apoiam estes princípios?", opts: ["Estudos experimentais demonstram a sua eficácia.", "Opiniões pessoais do autor.", "Não há evidências.", "Teorias antigas sem teste."], corr: 0, expl: "O livro baseia-se em vasta investigação experimental controlada[cite: 119]." },
+            { cat: "Mayer", text: "Como o livro aborda as diferenças individuais?", opts: ["Conhecimento prévio e espacial influenciam a eficácia.", "Todos aprendem igual.", "A idade é o único fator.", "Não aborda."], corr: 0, expl: "Alunos com baixo conhecimento prévio ou alta capacidade espacial beneficiam mais de certos princípios[cite: 120]." },
+            { cat: "Mayer", text: "A eficácia em diferentes contextos educacionais...", opts: ["A aprendizagem multimédia pode ser adaptada a vários ambientes.", "Só funciona em laboratório.", "Só funciona com crianças.", "Não é aplicável em escolas."], corr: 0, expl: "Mayer examina a aplicação prática em diversos cenários reais[cite: 122]." },
+            { cat: "Mayer", text: "Quais as limitações da investigação discutidas?", opts: ["Dificuldade em generalizar e medir efeitos precisos.", "Falta de computadores.", "Investigação demasiado cara.", "Nenhuma limitação."], corr: 0, expl: "Existem desafios na generalização dos resultados de laboratório para o mundo real[cite: 123]." },
+            { cat: "Mayer", text: "Como a Teoria da Carga Cognitiva se integra no design?", opts: ["Minimizar a sobrecarga cognitiva é central para o design.", "Aumentar a carga é bom.", "A carga cognitiva é irrelevante.", "O design deve ser complexo."], corr: 0, expl: "O objetivo é gerir a carga para permitir o processamento gerativo[cite: 124]." },
+            { cat: "Mayer", text: "Como otimizar a tecnologia multimédia?", opts: ["Alinhando-a com os processos cognitivos humanos.", "Usando os gráficos mais caros.", "Tornando-a mais rápida.", "Eliminando o fator humano."], corr: 0, expl: "A tecnologia deve adaptar-se à forma como a mente humana funciona[cite: 125]." },
+            { cat: "Mayer", text: "Quais as implicações práticas para professores?", opts: ["Os princípios orientam a criação de materiais mais eficazes.", "Devem deixar de usar livros.", "Devem usar apenas vídeos.", "Não há implicações."], corr: 0, expl: "Fornece diretrizes concretas para o design instrucional[cite: 126]." },
+            { cat: "Mayer", text: "Qual a relação entre Teoria e Prática no livro?", opts: ["Aplica princípios teóricos para melhorar ambientes reais.", "São opostas.", "A teoria ignora a prática.", "A prática não precisa de teoria."], corr: 0, expl: "Demonstra como a ciência cognitiva melhora a educação prática[cite: 127]." },
+            { cat: "Mayer", text: "Adaptação a estilos de aprendizagem envolve...", opts: ["Personalização e representações múltiplas.", "Ignorar preferências.", "Usar um único método.", "Forçar a leitura."], corr: 0, expl: "Diferentes formas de representação podem atender a diferentes necessidades[cite: 128]." },
+            { cat: "Mayer", text: "Quais os desafios futuros para a investigação?", opts: ["Compreender mecanismos subjacentes e novas tecnologias.", "Parar a investigação.", "Repetir os mesmos estudos.", "Ignorar a IA."], corr: 0, expl: "É necessário explorar o 'porquê' e adaptar-se à evolução tecnológica[cite: 129]." },
+            { cat: "Mayer", text: "Qual a contribuição do livro para a psicologia educacional?", opts: ["Oferece uma abordagem baseada em evidências sobre a aprendizagem.", "É apenas um manual técnico.", "Critica a tecnologia.", "É ficção científica."], corr: 0, expl: "Fundamenta o design instrucional na ciência de como as pessoas aprendem[cite: 131]." },
+
+            // --- APA (1-10) --- [cite: 138-158]
+            { cat: "APA", text: "Segundo a APA, o que é a Telepsicologia?", opts: ["Prestação de serviços via telecomunicações (vídeo, e-mail, etc.).", "Apenas terapia por telefone.", "Uso de robôs.", "Psicologia presencial."], corr: 0, expl: "Inclui métodos síncronos (videoconferência) e assíncronos (e-mail)[cite: 139]." },
+            { cat: "APA", text: "Quais os principais benefícios da telepsicologia?", opts: ["Acesso a locais remotos e redução de barreiras.", "É mais caro.", "Substitui o presencial.", "Não exige ética."], corr: 0, expl: "Reduz barreiras financeiras, logísticas e geográficas[cite: 141]." },
+            { cat: "APA", text: "Que competências o psicólogo deve ter?", opts: ["Técnicas, de conteúdo e populacionais.", "Apenas saber usar o Zoom.", "Saber programar.", "Reparar computadores."], corr: 0, expl: "Deve dominar a tecnologia, a evidência científica e adaptações culturais[cite: 143]." },
+            { cat: "APA", text: "Para a segurança de dados, recomenda-se...", opts: ["Encriptação, autenticação multifator e acordos seguros.", "Partilhar passwords.", "Usar redes públicas.", "Guardar tudo em papel."], corr: 0, expl: "Medidas técnicas robustas são essenciais para a confidencialidade[cite: 145]." },
+            { cat: "APA", text: "O consentimento informado deve incluir...", opts: ["Limites da confidencialidade, riscos tecnológicos e procedimentos de emergência.", "Apenas o preço.", "Garantia de internet estável.", "Nada de novo."], corr: 0, expl: "O cliente deve conhecer os riscos específicos do meio digital[cite: 147]." },
+            { cat: "APA", text: "Melhores práticas em avaliações online incluem...", opts: ["Usar ferramentas adaptadas e garantir integridade dos testes.", "Digitalizar testes sem autorização.", "Ignorar normas.", "Não avaliar online."], corr: 0, expl: "Os instrumentos devem ser apropriados para o ambiente digital[cite: 150]." },
+            { cat: "APA", text: "Como lidar com emergências remotas?", opts: ["Ter planos com localização do paciente e contactos locais.", "Desligar a chamada.", "Pedir para ligar depois.", "Chamar ajuda local do psicólogo."], corr: 0, expl: "É crucial saber onde o paciente está para acionar socorro local[cite: 152]." },
+            { cat: "APA", text: "Na prática transjurisdicional, deve-se...", opts: ["Respeitar regulamentações locais e internacionais.", "Ignorar leis estrangeiras.", "Seguir apenas a lei local.", "Usar VPN."], corr: 0, expl: "Evitar conflitos de jurisdição e ter as licenças necessárias[cite: 154]." },
+            { cat: "APA", text: "O que deve ser documentado nas sessões?", opts: ["Tecnologias usadas, localização, consentimento e falhas.", "Apenas o resumo clínico.", "Nada.", "A marca do computador."], corr: 0, expl: "O registo deve incluir especificidades da modalidade remota[cite: 156]." },
+            { cat: "APA", text: "Como garantir qualidade na supervisão?", opts: ["Desenvolver competências para telesupervisão e formação contínua.", "Supervisionar por SMS.", "Não supervisionar.", "Usar métodos antigos."], corr: 0, expl: "A supervisão também exige adaptação às tecnologias[cite: 158]." },
+
+            // --- EFPA (1-10) --- [cite: 165-186]
+            { cat: "EFPA", text: "Qual um desafio ético central nos serviços digitais?", opts: ["Comunicação limitada (ausência de pistas não verbais).", "Vídeo HD.", "Ter muitos clientes.", "Internet rápida."], corr: 0, expl: "A falta de presença física dificulta a leitura do contexto[cite: 166]." },
+            { cat: "EFPA", text: "Ao trabalhar com clientes de outros países...", opts: ["Compreender diferenças culturais e leis locais.", "Ignorar a cultura.", "Falar apenas a língua do psicólogo.", "Não atender."], corr: 0, expl: "Alinhar expectativas e respeitar regulamentações internacionais[cite: 168]." },
+            { cat: "EFPA", text: "Quais princípios éticos se aplicam?", opts: ["Respeito, Competência, Responsabilidade e Integridade.", "Apenas o lucro.", "Nenhum.", "Apenas confidencialidade."], corr: 0, expl: "O Meta-Código da EFPA aplica-se integralmente[cite: 170]." },
+            { cat: "EFPA", text: "Como garantir segurança digital?", opts: ["Encriptação e autenticação multifator.", "Usar passwords simples.", "Não usar antivírus.", "Partilhar contas."], corr: 0, expl: "Proteger o acesso a dados sensíveis é prioritário[cite: 172]." },
+            { cat: "EFPA", text: "Cuidados com a confidencialidade incluem...", opts: ["Informar sobre limites e proteger contra acesso de terceiros.", "Sessões em cafés.", "Deixar o ecrã visível.", "Gravar sem avisar."], corr: 0, expl: "Garantir que ninguém ouve ou vê a sessão indevidamente[cite: 174]." },
+            { cat: "EFPA", text: "Para oferecer serviços apropriados, deve-se...", opts: ["Avaliar a adequação do formato e usar métodos baseados em evidência.", "Aceitar qualquer caso.", "Usar intuição.", "Ignorar a técnica."], corr: 0, expl: "Nem todos os casos ou métodos servem para o digital[cite: 177]." },
+            { cat: "EFPA", text: "Melhores práticas de consentimento digital?", opts: ["Obter consentimento claro e verificável.", "Consentimento implícito.", "Não pedir.", "Assumir que sim."], corr: 0, expl: "Essencial, especialmente com vulneráveis[cite: 180]." },
+            { cat: "EFPA", text: "Como lidar com a ansiedade tecnológica do cliente?", opts: ["Dar suporte na adaptação e assegurar ambiente seguro.", "Criticar o cliente.", "Ignorar.", "Desistir."], corr: 0, expl: "O psicólogo deve facilitar o uso da tecnologia[cite: 182]." },
+            { cat: "EFPA", text: "Sobre a validade dos testes online...", opts: ["Usar apenas testes adaptados e validados para online.", "Digitalizar papel.", "Usar qualquer teste.", "Não testar."], corr: 0, expl: "A validade científica deve ser garantida no novo meio[cite: 184]." },
+            { cat: "EFPA", text: "Papel das associações de psicólogos?", opts: ["Criar códigos éticos, formação e registos.", "Apenas cobrar quotas.", "Não interferir.", "Vender software."], corr: 0, expl: "Devem apoiar a regulação e formação na área digital[cite: 186]." },
+
+            // --- OPP (1-10) --- [cite: 193-214]
+            { cat: "OPP", text: "O que é Inteligência Artificial (IA)?", opts: ["Sistemas que imitam ou ultrapassam a inteligência humana.", "Robôs conscientes.", "Ficheiros Excel.", "Magia."], corr: 0, expl: "Inclui Machine Learning e Processamento de Linguagem Natural[cite: 194]." },
+            { cat: "OPP", text: "Benefício da IA na Saúde Psicológica?", opts: ["Prevenção, diagnóstico precoce e chatbots de suporte.", "Substituição total.", "Diagnóstico infalível.", "Cura rápida."], corr: 0, expl: "Auxilia na triagem e suporte, mas não substitui[cite: 197]." },
+            { cat: "OPP", text: "Principais desafios éticos da IA?", opts: ["Transparência, enviesamentos (bias) e privacidade.", "Custo da luz.", "Falta de Internet.", "Robôs revoltados."], corr: 0, expl: "Algoritmos podem ser opacos e discriminatórios[cite: 199]." },
+            { cat: "OPP", text: "IA no local de trabalho pode...", opts: ["Melhorar eficiência, mas deve acautelar a saúde psicológica.", "Substituir todos os chefes.", "Resolver tudo.", "Não tem impacto."], corr: 0, expl: "Deve-se evitar que perpetue desigualdades ou stress[cite: 201]." },
+            { cat: "OPP", text: "Importância da diversidade em equipas de IA?", opts: ["Reduz enviesamentos e cria sistemas inclusivos.", "É irrelevante.", "Cumprir quotas.", "Estética."], corr: 0, expl: "Equipas diversas evitam a criação de algoritmos cegos[cite: 204]." },
+            { cat: "OPP", text: "Recomendação para regular a IA na Saúde?", opts: ["Regular chatbots e garantir privacidade e inclusão.", "Proibir IA.", "Deixar sem regras.", "Usar IA para tudo."], corr: 0, expl: "É necessário supervisão ética e formação[cite: 206]." },
+            { cat: "OPP", text: "Benefício da IA na Educação?", opts: ["Personalizar aprendizagem e inovar na avaliação.", "Substituir professores.", "Fazer TPC pelos alunos.", "Nenhum."], corr: 0, expl: "Permite adaptar o ensino ao ritmo do aluno[cite: 208]." },
+            { cat: "OPP", text: "Riscos da IA na Justiça?", opts: ["Algoritmos enviesados perpetuam discriminações.", "Justiça rápida demais.", "Juízes robôs.", "Falta de dados."], corr: 0, expl: "Decisões automáticas podem ser injustas se os dados forem viciados[cite: 210]." },
+            { cat: "OPP", text: "Impacto da IA no mercado de trabalho?", opts: ["Pode criar insegurança laboral e desigualdades.", "Cria emprego para todos.", "Acaba com o trabalho.", "Nenhum impacto."], corr: 0, expl: "Automatização de tarefas pode gerar vulnerabilidade[cite: 212]." },
+            { cat: "OPP", text: "Papel do psicólogo na IA?", opts: ["Garantir design ético e centrado no humano.", "Programar.", "Vender computadores.", "Nenhum."], corr: 0, expl: "Assegurar que a tecnologia respeita valores e emoções humanas[cite: 214]." }
+        ];
+
+        // CONFIGURAÇÃO
+        const CONFIG = {
+            TEMPO_QUESTAO: 30, // Segundos
+            QTD_RODADA: 20     // Perguntas por jogo
+        };
+
+        // ESTADO
+        let estado = { perguntas: [], indice: 0, pontos: 0, tempo: 0, timerId: null, ativo: false };
+
+        // UI
+        const ui = {
+            inicio: document.getElementById('screen-start'),
+            jogo: document.getElementById('screen-game'),
+            fim: document.getElementById('screen-end'),
+            btnStart: document.getElementById('btn-start'),
+            btnNext: document.getElementById('btn-next'),
+            btnRestart: document.getElementById('btn-restart'),
+            qText: document.getElementById('q-text'),
+            qCat: document.getElementById('q-category'),
+            qOptions: document.getElementById('q-options'),
+            feedback: document.getElementById('feedback-area'),
+            hudScore: document.getElementById('hud-score'),
+            hudProgress: document.getElementById('hud-progress'),
+            timerBar: document.getElementById('timer-bar'),
+            finalScore: document.getElementById('final-score'),
+            finalMsg: document.getElementById('final-msg')
+        };
+
+        // ALGORITMO SHUFFLE
+        function shuffle(arr) {
+            return arr.sort(() => Math.random() - 0.5);
+        }
+
+        // LÓGICA DO JOGO
+        function iniciarJogo() {
+            // Escolher 20 perguntas aleatórias do banco completo
+            const pool = JSON.parse(JSON.stringify(bancoCompleto));
+            estado.perguntas = shuffle(pool).slice(0, CONFIG.QTD_RODADA);
+            estado.indice = 0;
+            estado.pontos = 0;
+            
+            ui.inicio.classList.add('hidden');
+            ui.fim.classList.add('hidden');
+            ui.jogo.classList.remove('hidden');
+            carregarPergunta();
+        }
+
+        function carregarPergunta() {
+            const q = estado.perguntas[estado.indice];
+            
+            ui.feedback.classList.add('hidden');
+            ui.btnNext.classList.add('hidden');
+            ui.qOptions.innerHTML = '';
+            ui.qOptions.classList.remove('disabled');
+
+            ui.hudProgress.innerText = `Questão ${estado.indice + 1} / ${CONFIG.QTD_RODADA}`;
+            ui.hudScore.innerText = `Score: ${estado.pontos}`;
+            
+            ui.qText.innerText = q.text;
+            ui.qCat.innerText = q.cat;
+            
+            // Cores das Categorias
+            if(q.cat.includes("Mayer")) ui.qCat.style.background = "#3b82f6";
+            else if(q.cat.includes("APA")) ui.qCat.style.background = "#ec4899";
+            else if(q.cat.includes("EFPA")) ui.qCat.style.background = "#14b8a6";
+            else ui.qCat.style.background = "#f97316";
+
+            // Opções
+            let opts = q.opts.map((t, i) => ({ t, i }));
+            opts = shuffle(opts);
+
+            opts.forEach(o => {
+                const btn = document.createElement('div');
+                btn.className = 'option-card';
+                btn.innerText = o.t;
+                btn.onclick = () => verificar(o.i, btn, opts);
+                ui.qOptions.appendChild(btn);
+            });
+
+            // Timer
+            estado.tempo = CONFIG.TEMPO_QUESTAO;
+            estado.ativo = true;
+            atualizarTimer();
+            if(estado.timerId) clearInterval(estado.timerId);
+            estado.timerId = setInterval(() => {
+                estado.tempo--;
+                atualizarTimer();
+                if(estado.tempo <= 0) finalizarTurno(false);
+            }, 1000);
+        }
+
+        function atualizarTimer() {
+            const pct = (estado.tempo / CONFIG.TEMPO_QUESTAO) * 100;
+            ui.timerBar.style.width = `${pct}%`;
+            ui.timerBar.style.background = estado.tempo > 10 ? 'var(--primary)' : 'var(--error)';
+        }
+
+        function verificar(escolha, btn, opts) {
+            if(!estado.ativo) return;
+            const q = estado.perguntas[estado.indice];
+            const acertou = escolha === q.corr;
+            
+            if(acertou) {
+                estado.pontos += 100 + (estado.tempo * 10);
+                btn.classList.add('correct');
+            } else {
+                btn.classList.add('wrong');
+            }
+            finalizarTurno(acertou);
+        }
+
+        function finalizarTurno(acertou) {
+            estado.ativo = false;
+            clearInterval(estado.timerId);
+            const q = estado.perguntas[estado.indice];
+            
+            ui.qOptions.classList.add('disabled');
+            
+            // Mostrar correta
+            Array.from(ui.qOptions.children).forEach(b => {
+                if(b.innerText === q.opts[q.corr]) b.classList.add('correct');
+            });
+
+            const titulo = acertou ? "✅ Correto!" : (estado.tempo <= 0 ? "⏰ Tempo!" : "❌ Incorreto");
+            ui.feedback.innerHTML = `<strong style="color:${acertou?'var(--success)':'var(--error)'}">${titulo}</strong><br>${q.expl}`;
+            ui.feedback.style.borderLeftColor = acertou?'var(--success)':'var(--error)';
+            ui.feedback.classList.remove('hidden');
+            ui.hudScore.innerText = `Score: ${estado.pontos}`;
+            ui.btnNext.classList.remove('hidden');
+        }
+
+        ui.btnNext.onclick = () => {
+            estado.indice++;
+            if(estado.indice >= CONFIG.QTD_RODADA) fimJogo();
+            else carregarPergunta();
+        };
+
+        function fimJogo() {
+            ui.jogo.classList.add('hidden');
+            ui.fim.classList.remove('hidden');
+            ui.finalScore.innerText = estado.pontos;
+            
+            const max = CONFIG.QTD_RODADA * 400;
+            const r = estado.pontos / max;
+            let m = "Estuda mais!";
+            if(r > 0.8) m = "🏆 Excelente! Dominas a matéria.";
+            else if(r > 0.5) m = "👍 Bom trabalho, continua a rever.";
+            ui.finalMsg.innerText = m;
+        }
+
+        ui.btnStart.onclick = iniciarJogo;
+        ui.btnRestart.onclick = iniciarJogo;
+
+    </script>
+</body>
+</html>
